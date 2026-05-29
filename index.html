@@ -19,7 +19,6 @@
             padding-bottom: 80px;
         }
         
-        /* Шапка */
         .header {
             background: var(--tg-theme-secondary-bg-color, linear-gradient(135deg, #0f3460 0%, #16213e 100%));
             padding: 20px;
@@ -45,7 +44,6 @@
             margin-top: 5px;
         }
         
-        /* Баланс карточка */
         .balance-card {
             background: var(--tg-theme-secondary-bg-color, linear-gradient(135deg, #1e3a5f 0%, #0f3460 100%));
             margin: 15px;
@@ -77,7 +75,6 @@
         .balance-value.ton { color: #0088cc; }
         .balance-value.stars { color: #FFD700; }
         
-        /* Основные секции */
         .section {
             display: none;
             padding: 15px;
@@ -87,7 +84,6 @@
             display: block;
         }
         
-        /* Сетка NFT */
         .nft-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -179,7 +175,6 @@
             margin-top: 5px;
         }
         
-        /* Профиль */
         .profile-header {
             display: flex;
             align-items: center;
@@ -223,7 +218,6 @@
             cursor: pointer;
         }
         
-        /* Кнопки профиля */
         .profile-buttons {
             display: flex;
             gap: 10px;
@@ -246,7 +240,6 @@
             transform: scale(0.98);
         }
         
-        /* Секции профиля */
         .profile-section {
             display: none;
         }
@@ -255,7 +248,6 @@
             display: block;
         }
         
-        /* Формы */
         .form-group {
             margin-bottom: 15px;
         }
@@ -294,7 +286,6 @@
             margin-top: 10px;
         }
         
-        /* История транзакций */
         .transaction-item {
             background: var(--tg-theme-secondary-bg-color, rgba(255,255,255,0.05));
             padding: 12px;
@@ -321,7 +312,6 @@
             color: var(--tg-theme-hint-color, rgba(255,255,255,0.5));
         }
         
-        /* Пустое состояние */
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -342,7 +332,6 @@
             text-decoration: none;
         }
         
-        /* Загрузка */
         .loading {
             text-align: center;
             padding: 40px;
@@ -362,7 +351,6 @@
             to { transform: rotate(360deg); }
         }
         
-        /* Модальное окно */
         .modal {
             display: none;
             position: fixed;
@@ -452,7 +440,6 @@
             color: white;
         }
         
-        /* Нижняя навигация */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -486,7 +473,6 @@
             font-size: 11px;
         }
         
-        /* Toast уведомления */
         .toast {
             position: fixed;
             bottom: 80px;
@@ -509,7 +495,21 @@
         .toast.error { background: #dc3545; }
         .toast.success { background: #28a745; }
         
-        /* Скрытие элементов */
+        .filter-chip {
+            background: var(--tg-theme-secondary-bg-color, rgba(255,255,255,0.1));
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-block;
+        }
+        
+        .filter-chip.active {
+            background: linear-gradient(135deg, #FFD700, #FF8C00);
+            color: #1a1a2e;
+        }
+        
         .hidden {
             display: none;
         }
@@ -521,7 +521,6 @@
         <p>Покупай, продавай, коллекционируй</p>
     </div>
     
-    <!-- Баланс карточка (видна везде) -->
     <div class="balance-card">
         <div class="balance-item">
             <div class="balance-label">💵 USDT</div>
@@ -537,7 +536,7 @@
         </div>
     </div>
     
-    <!-- Секция: Правила (первый экран) -->
+    <!-- Секция: Правила -->
     <div id="rules_section" class="section active">
         <div class="empty-state">
             <div class="empty-state-icon">📜</div>
@@ -550,9 +549,9 @@
         </div>
     </div>
     
-    <!-- Секция: Покупка (витрина) -->
+    <!-- Секция: Покупка -->
     <div id="buy_section" class="section">
-        <div class="filters" style="display: flex; gap: 10px; margin-bottom: 15px; overflow-x: auto; white-space: nowrap;">
+        <div class="filters" style="display: flex; gap: 10px; margin-bottom: 15px; overflow-x: auto; white-space: nowrap; padding: 0 15px;">
             <div class="filter-chip active" data-rarity="all">Все</div>
             <div class="filter-chip" data-rarity="common">⚪ Обычные</div>
             <div class="filter-chip" data-rarity="rare">🔵 Редкие</div>
@@ -567,7 +566,7 @@
         </div>
     </div>
     
-    <!-- Секция: Продажа (инвентарь) -->
+    <!-- Секция: Продажа -->
     <div id="sell_section" class="section">
         <div id="inventory_grid" class="nft-grid">
             <div class="loading">
@@ -605,11 +604,9 @@
         
         <div id="profile_withdraw" class="profile-section">
             <div class="form-group">
-                <label class="form-label">💰 Выберите валюту</label>
+                <label class="form-label">💰 Валюта</label>
                 <select class="form-select" id="withdraw_currency">
                     <option value="USDT">💵 USDT</option>
-                    <option value="TON">🪙 TON</option>
-                    <option value="STARS">⭐ STARS</option>
                 </select>
             </div>
             <div class="form-group">
@@ -617,8 +614,10 @@
                 <input type="number" class="form-input" id="withdraw_amount" placeholder="Введите сумму" step="0.01" min="1">
             </div>
             <div class="form-group">
-                <label class="form-label">📤 Адрес кошелька</label>
-                <input type="text" class="form-input" id="withdraw_address" placeholder="Введите адрес кошелька">
+                <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; font-size: 12px; color: rgba(255,255,255,0.7);">
+                    ⚡ После создания заявки средства будут списаны с баланса.<br>
+                    📞 Менеджер свяжется с вами для выплаты.
+                </div>
             </div>
             <button class="form-submit" id="withdraw_btn">📤 Создать заявку на вывод</button>
         </div>
@@ -665,14 +664,14 @@
         </div>
     </div>
     
-    <!-- Модальное окно для продажи (выбор валюты и цены) -->
+    <!-- Модальное окно для продажи -->
     <div id="sell_modal" class="modal">
         <div class="modal-content">
             <div class="modal-image" id="sell_modal_image">🎨</div>
             <div class="modal-info">
                 <div class="modal-name" id="sell_modal_name"></div>
                 <div class="form-group">
-                    <label class="form-label">💰 Выберите валюту</label>
+                    <label class="form-label">💰 Валюта</label>
                     <select class="form-select" id="sell_currency">
                         <option value="USDT">💵 USDT</option>
                         <option value="TON">🪙 TON</option>
@@ -691,7 +690,7 @@
         </div>
     </div>
     
-    <!-- Модальное окно для отмены продажи -->
+    <!-- Модальное окно для снятия с продажи -->
     <div id="unlist_modal" class="modal">
         <div class="modal-content">
             <div class="modal-image" id="unlist_modal_image">🎨</div>
@@ -709,7 +708,7 @@
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-        // ========== ИНИЦИАЛИЗАЦИЯ ==========
+        // ========== НАСТРОЙКИ ==========
         let tg = window.Telegram.WebApp;
         let currentUser = null;
         let marketData = [];
@@ -717,14 +716,13 @@
         let transactions = [];
         let currentSelectedNFT = null;
         let currentRarity = 'all';
-        let currentView = 'rules'; // rules, buy, sell, profile
+        let currentView = 'rules';
         let currentProfileTab = 'inventory';
+        let rulesAccepted = false;
         
-        // Настройки
         const MANAGER_USERNAME = "ggyyert";
         const MANAGER_LINK = `https://t.me/${MANAGER_USERNAME}`;
         
-        // Расширяем WebApp
         tg.expand();
         tg.enableClosingConfirmation();
         tg.MainButton.hide();
@@ -765,15 +763,13 @@
         }
         
         function sendToBot(action, data) {
+            const message = JSON.stringify({ action, data });
+            console.log('📤 Отправка в бота:', message);
             if (tg && tg.sendData) {
-                tg.sendData(JSON.stringify({ action, data }));
+                tg.sendData(message);
             } else {
-                console.log('Send to bot:', { action, data });
+                console.log('⚠️ tg.sendData не доступен');
             }
-        }
-        
-        function openManagerChat() {
-            tg.openTelegramLink(MANAGER_LINK);
         }
         
         function formatBalance(amount) {
@@ -826,7 +822,6 @@
             container.innerHTML = filtered.map(nft => {
                 const priceClass = nft.currency.toLowerCase();
                 const priceSymbol = nft.currency === 'USDT' ? '💵' : nft.currency === 'TON' ? '🪙' : '⭐';
-                const rarityClass = `rarity-${nft.rarity}`;
                 let rarityName = '';
                 if (nft.rarity === 'common') rarityName = 'Обычный';
                 else if (nft.rarity === 'rare') rarityName = 'Редкий';
@@ -842,7 +837,7 @@
                         </div>
                         <div class="nft-info">
                             <div class="nft-name">${escapeHtml(nft.name)}</div>
-                            <div class="nft-rarity ${rarityClass}">${rarityName}</div>
+                            <div class="nft-rarity rarity-${nft.rarity}">${rarityName}</div>
                             <div class="nft-price ${priceClass}">${priceSymbol} ${formatBalance(nft.price)} ${nft.currency}</div>
                             <div class="nft-seller">👤 ${escapeHtml(nft.seller_name)}</div>
                         </div>
@@ -860,7 +855,6 @@
                     <div class="empty-state">
                         <div class="empty-state-icon">📦</div>
                         <div class="empty-state-text">Предметов пока нет</div>
-                        <div class="empty-state-text">Но ты можешь это исправить!</div>
                         <div class="empty-state-text">Пополни их через админа: <a href="${MANAGER_LINK}" class="empty-state-link">@${MANAGER_USERNAME}</a></div>
                     </div>
                 `;
@@ -869,15 +863,12 @@
                 return;
             }
             
-            // Разделяем на в продаже и не в продаже
             const listedNFTs = myNFTs.filter(nft => nft.is_listed);
             const unlistedNFTs = myNFTs.filter(nft => !nft.is_listed);
             
             const renderNFTs = (nfts, showUnlist = false) => {
                 return nfts.map(nft => {
                     const priceSymbol = nft.currency === 'USDT' ? '💵' : nft.currency === 'TON' ? '🪙' : '⭐';
-                    const priceClass = nft.currency.toLowerCase();
-                    const rarityClass = `rarity-${nft.rarity}`;
                     let rarityName = '';
                     if (nft.rarity === 'common') rarityName = 'Обычный';
                     else if (nft.rarity === 'rare') rarityName = 'Редкий';
@@ -900,8 +891,8 @@
                             </div>
                             <div class="nft-info">
                                 <div class="nft-name">${escapeHtml(nft.name)}</div>
-                                <div class="nft-rarity ${rarityClass}">${rarityName}</div>
-                                ${showUnlist ? `<div class="nft-price ${priceClass}">${priceSymbol} ${formatBalance(nft.price)} ${nft.currency}</div>` : ''}
+                                <div class="nft-rarity rarity-${nft.rarity}">${rarityName}</div>
+                                ${showUnlist ? `<div class="nft-price">${priceSymbol} ${formatBalance(nft.price)} ${nft.currency}</div>` : ''}
                                 ${statusBadge}
                             </div>
                         </div>
@@ -921,7 +912,6 @@
             
             if (inventoryContainer) inventoryContainer.innerHTML = inventoryHTML;
             
-            // Для профиля показываем все NFT
             let profileHTML = '';
             if (unlistedNFTs.length > 0) {
                 profileHTML += `<div style="grid-column: 1/-1; margin: 10px 0 0 10px; color: rgba(255,255,255,0.5);">📦 НЕ В ПРОДАЖЕ</div>`;
@@ -978,7 +968,6 @@
             currentSelectedNFT = nft;
             
             const priceSymbol = nft.currency === 'USDT' ? '💵' : nft.currency === 'TON' ? '🪙' : '⭐';
-            const priceClass = nft.currency.toLowerCase();
             let rarityName = '';
             if (nft.rarity === 'common') rarityName = 'Обычный';
             else if (nft.rarity === 'rare') rarityName = 'Редкий';
@@ -987,7 +976,6 @@
             
             document.getElementById('modal_name').innerHTML = `${nft.name} <span style="font-size: 14px; color: rgba(255,255,255,0.5);">(${rarityName})</span>`;
             document.getElementById('modal_price').innerHTML = `${priceSymbol} ${formatBalance(nft.price)} ${nft.currency}`;
-            document.getElementById('modal_price').className = `modal-price ${priceClass}`;
             document.getElementById('modal_seller').innerHTML = `👤 Продавец: ${escapeHtml(nft.seller_name)}`;
             
             const modalImage = document.getElementById('modal_image');
@@ -1020,7 +1008,7 @@
         
         // ========== ОБРАБОТЧИКИ ==========
         document.getElementById('modal_buy_btn').onclick = () => {
-            openManagerChat();
+            window.open(MANAGER_LINK, '_blank');
             document.getElementById('modal').classList.remove('active');
         };
         
@@ -1078,27 +1066,19 @@
         document.getElementById('withdraw_btn').onclick = () => {
             const amount = parseFloat(document.getElementById('withdraw_amount').value);
             const currency = document.getElementById('withdraw_currency').value;
-            const address = document.getElementById('withdraw_address').value;
             
             if (isNaN(amount) || amount < 1) {
-                showToast('❌ Минимальная сумма вывода: 1', 'error');
-                return;
-            }
-            
-            if (!address || address.length < 10) {
-                showToast('❌ Укажите корректный адрес кошелька', 'error');
+                showToast('❌ Минимальная сумма вывода: 1 USDT', 'error');
                 return;
             }
             
             sendToBot('create_withdraw', {
                 amount: amount,
-                currency: currency,
-                address: address
+                currency: currency
             });
             
             document.getElementById('withdraw_amount').value = '';
-            document.getElementById('withdraw_address').value = '';
-            showToast('✅ Заявка на вывод создана! Ожидайте подтверждения', 'success');
+            showToast('✅ Заявка на вывод создана! Менеджер свяжется с вами', 'success');
         };
         
         // Фильтры
@@ -1128,13 +1108,10 @@
             };
         });
         
-        // Правила
+        // Принятие правил
         document.getElementById('accept_rules_btn').onclick = () => {
             sendToBot('accept_rules', {});
-            showToast('✅ Правила приняты!', 'success');
-            setTimeout(() => {
-                switchView('buy');
-            }, 500);
+            showToast('✅ Правила приняты! Загрузка...', 'success');
         };
         
         // Навигация
@@ -1169,7 +1146,7 @@
         
         document.querySelectorAll('.nav-item').forEach(nav => {
             nav.onclick = () => {
-                if (currentView !== 'rules') {
+                if (rulesAccepted) {
                     switchView(nav.dataset.nav);
                 } else {
                     showToast('❌ Сначала примите правила', 'error');
@@ -1179,50 +1156,99 @@
         
         // ========== ОБРАБОТКА ДАННЫХ ОТ БОТА ==========
         window.handleBotResponse = function(response) {
+            console.log('📥 Получено от бота:', response);
             try {
-                const data = JSON.parse(response);
-                console.log('Received:', data);
+                let data;
+                if (typeof response === 'string') {
+                    data = JSON.parse(response);
+                } else {
+                    data = response;
+                }
                 
+                console.log('📊 Распарсенные данные:', data);
+                
+                // Проверка на успешное принятие правил
+                if (data.success === true && data.message === 'Правила приняты!') {
+                    rulesAccepted = true;
+                    showToast('✅ Правила приняты!', 'success');
+                    switchView('buy');
+                    loadBalances();
+                    loadMarket();
+                    return;
+                }
+                
+                // Баланс
+                if (data.usdt !== undefined) {
+                    document.getElementById('usdt_balance').textContent = formatBalance(data.usdt);
+                    document.getElementById('ton_balance').textContent = formatBalance(data.ton || 0);
+                    document.getElementById('stars_balance').textContent = formatBalance(data.stars || 0);
+                    return;
+                }
+                
+                // Массив данных (NFT или транзакции)
                 if (Array.isArray(data)) {
-                    if (data.length > 0 && (data[0].seller_name !== undefined || data[0].price !== undefined)) {
+                    if (data.length > 0 && data[0].seller_name !== undefined) {
                         marketData = data;
                         renderMarket();
                     } else if (data.length > 0 && (data[0].owner_id !== undefined || data[0].is_listed !== undefined)) {
                         myNFTs = data;
                         renderMyNFTs();
-                    } else if (data.length > 0 && (data[0].type !== undefined)) {
+                    } else if (data.length > 0 && data[0].type !== undefined) {
                         transactions = data;
                         renderTransactions();
                     }
-                } else if (data.usdt !== undefined) {
-                    document.getElementById('usdt_balance').textContent = formatBalance(data.usdt);
-                    document.getElementById('ton_balance').textContent = formatBalance(data.ton || 0);
-                    document.getElementById('stars_balance').textContent = formatBalance(data.stars || 0);
-                } else if (data.success === true) {
-                    showToast(data.message || '✅ Операция выполнена', 'success');
-                    if (data.need_refresh) {
-                        setTimeout(() => {
-                            loadBalances();
-                            loadMyNFTs();
-                            loadMarket();
-                        }, 500);
-                    }
-                } else if (data.error) {
-                    showToast(data.message || data.error, 'error');
+                    return;
                 }
+                
+                // Успешная операция
+                if (data.success === true) {
+                    showToast(data.message || '✅ Операция выполнена', 'success');
+                    if (data.new_balance !== undefined) {
+                        document.getElementById('usdt_balance').textContent = formatBalance(data.new_balance);
+                    }
+                    setTimeout(() => {
+                        loadBalances();
+                        loadMyNFTs();
+                        loadMarket();
+                    }, 1000);
+                    return;
+                }
+                
+                // Ошибка
+                if (data.error === true || data.error) {
+                    showToast(data.message || '❌ Ошибка операции', 'error');
+                    return;
+                }
+                
             } catch(e) {
-                console.log('Ошибка парсинга:', e, response);
+                console.log('❌ Ошибка парсинга:', e, response);
             }
         };
         
+        // Перехват ответов от бота
+        if (tg && tg.onEvent) {
+            tg.onEvent('web_app_data', function(event) {
+                if (event.data) {
+                    window.handleBotResponse(event.data);
+                }
+            });
+        }
+        
+        // Альтернативный способ получения ответов
+        if (tg && tg.WebApp && tg.WebApp.sendData) {
+            const originalSendData = tg.sendData;
+            tg.sendData = function(data) {
+                console.log('📤 Отправка данных:', data);
+                originalSendData.call(tg, data);
+            };
+        }
+        
         // Запуск
         tg.ready();
-        
-        // Начальная загрузка
         loadBalances();
         
-        // Если пользователь уже принимал правила, можно сразу показать главное меню
-        // (на стороне бота нужно сохранять статус принятия правил)
+        // Проверяем, не приняты ли уже правила
+        sendToBot('check_rules', {});
     </script>
 </body>
 </html>
