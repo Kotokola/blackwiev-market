@@ -120,18 +120,6 @@
             object-fit: cover;
         }
         
-        .nft-image .nft-link {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            background: rgba(0,0,0,0.7);
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            text-decoration: none;
-            color: #FFD700;
-        }
-        
         .nft-info {
             padding: 12px;
         }
@@ -232,6 +220,11 @@
             color: white;
             font-weight: 600;
             cursor: pointer;
+        }
+        
+        .profile-btn.active {
+            background: linear-gradient(135deg, #FFD700, #FF8C00);
+            color: #1a1a2e;
         }
         
         .profile-section {
@@ -499,6 +492,25 @@
             white-space: nowrap;
             padding: 0 15px;
         }
+        
+        /* Стили для списка NFT в профиле */
+        .nft-status-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-top: 5px;
+        }
+        
+        .status-listed {
+            background: #28a745;
+            color: white;
+        }
+        
+        .status-unlisted {
+            background: #6c757d;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -574,12 +586,12 @@
         </div>
         
         <div class="profile-buttons">
-            <button class="profile-btn" data-profile-tab="inventory">🎨 Инвентарь</button>
+            <button class="profile-btn active" data-profile-tab="inventory">🎨 Инвентарь</button>
             <button class="profile-btn" data-profile-tab="withdraw">💸 Вывод</button>
             <button class="profile-btn" data-profile-tab="history">📜 История</button>
         </div>
         
-        <div id="profile_inventory" class="profile-section">
+        <div id="profile_inventory" class="profile-section active">
             <div id="profile_inventory_grid" class="nft-grid">
                 <div class="loading">
                     <div class="spinner"></div>
@@ -628,7 +640,7 @@
         </div>
     </div>
     
-    <!-- Модальные окна -->
+    <!-- Модальное окно для покупки -->
     <div id="modal" class="modal">
         <div class="modal-content">
             <div class="modal-image" id="modal_image">🎨</div>
@@ -644,6 +656,7 @@
         </div>
     </div>
     
+    <!-- Модальное окно для выставления на продажу -->
     <div id="sell_modal" class="modal">
         <div class="modal-content">
             <div class="modal-image" id="sell_modal_image">🎨</div>
@@ -669,6 +682,7 @@
         </div>
     </div>
     
+    <!-- Модальное окно для снятия с продажи -->
     <div id="unlist_modal" class="modal">
         <div class="modal-content">
             <div class="modal-image" id="unlist_modal_image">🎨</div>
@@ -685,174 +699,125 @@
     <div id="toast" class="toast"></div>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script>
-    // ========== НАСТРОЙКИ ==========
-    let tg = window.Telegram.WebApp;
-    let currentUser = null;
-    let marketData = [];
-    let myNFTs = [];
-    let transactions = [];
-    let currentSelectedNFT = null;
-    let currentRarity = 'all';
-    let currentView = 'rules';
-    let rulesAccepted = false;
-    let toastTimeout = null;
-    
-    const MANAGER_USERNAME = "ggyyert";
-    const MANAGER_LINK = `https://t.me/${MANAGER_USERNAME}`;
-    
-    tg.expand();
-    tg.enableClosingConfirmation();
-    tg.MainButton.hide();
-    tg.ready();
-    
-    // Применяем тему Telegram
-    if (tg.themeParams) {
-        document.body.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#1a1a2e');
-        document.body.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#ffffff');
-        document.body.style.setProperty('--tg-theme-hint-color', tg.themeParams.hint_color || '#aaaaaa');
-        document.body.style.setProperty('--tg-theme-secondary-bg-color', tg.themeParams.secondary_bg_color || '#2a2a3e');
-    }
-    
-    // Получаем данные пользователя
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        currentUser = tg.initDataUnsafe.user;
-        document.getElementById('profile_name').textContent = currentUser.first_name || 'Пользователь';
-        document.getElementById('profile_username').textContent = currentUser.username ? `@${currentUser.username}` : 'Нет username';
-    }
-    
-    // Показ ID с уведомлением
-    document.getElementById('profile_id').onclick = () => {
-        const userId = currentUser ? currentUser.id : 'Не определен';
-        showToast(`🆔 Ваш ID: ${userId}`);
-    };
-    
-    // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
-    function showToast(message, type = 'success') {
-        // Очищаем предыдущий таймаут
-        if (toastTimeout) clearTimeout(toastTimeout);
+    <script>
+        // ========== НАСТРОЙКИ ==========
+        let tg = window.Telegram.WebApp;
+        let currentUser = null;
+        let marketData = [];
+        let myNFTs = [];
+        let transactions = [];
+        let currentSelectedNFT = null;
+        let currentRarity = 'all';
+        let rulesAccepted = false;
+        let toastTimeout = null;
         
-        const toast = document.getElementById('toast');
-        toast.textContent = message;
-        toast.className = `toast ${type} show`;
+        const MANAGER_USERNAME = "ggyyert";
+        const MANAGER_LINK = `https://t.me/${MANAGER_USERNAME}`;
         
-        // Автоматически скрываем через 3 секунды
-        toastTimeout = setTimeout(() => {
-            toast.classList.remove('show');
-        }, 3000);
-    }
-    
-    function sendToBot(action, data) {
-        const message = JSON.stringify({ action, data });
-        console.log('📤 Отправка в бота:', message);
-        tg.sendData(message);
-    }
-    
-    function formatBalance(amount) {
-        return parseFloat(amount).toFixed(2);
-    }
-    
-    function escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-    
-    // ========== ЗАГРУЗКА ДАННЫХ ==========
-    function loadBalances() {
-        sendToBot('get_balance', {});
-    }
-    
-    function loadMarket() {
-        sendToBot('get_market', {});
-    }
-    
-    function loadMyNFTs() {
-        sendToBot('get_my_nfts', {});
-    }
-    
-    function loadTransactions() {
-        sendToBot('get_transactions', {});
-    }
-    
-    // ========== ОТОБРАЖЕНИЕ ==========
-    function renderMarket() {
-        const container = document.getElementById('market_grid');
+        tg.expand();
+        tg.enableClosingConfirmation();
+        tg.MainButton.hide();
+        tg.ready();
         
-        if (!marketData || marketData.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state" style="grid-column: 1/-1;">
-                    <div class="empty-state-icon">🎨</div>
-                    <div class="empty-state-text">Нет NFT в продаже</div>
-                    <div class="empty-state-text">Скоро здесь появятся новые предметы!</div>
-                </div>
-            `;
-            return;
+        // Применяем тему Telegram
+        if (tg.themeParams) {
+            document.body.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#1a1a2e');
+            document.body.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#ffffff');
+            document.body.style.setProperty('--tg-theme-hint-color', tg.themeParams.hint_color || '#aaaaaa');
+            document.body.style.setProperty('--tg-theme-secondary-bg-color', tg.themeParams.secondary_bg_color || '#2a2a3e');
         }
         
-        let filtered = marketData;
-        if (currentRarity !== 'all') {
-            filtered = marketData.filter(nft => nft.rarity === currentRarity);
+        // Получаем данные пользователя
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            currentUser = tg.initDataUnsafe.user;
+            document.getElementById('profile_name').textContent = currentUser.first_name || 'Пользователь';
+            document.getElementById('profile_username').textContent = currentUser.username ? `@${currentUser.username}` : 'Нет username';
         }
         
-        if (filtered.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state" style="grid-column: 1/-1;">
-                    <div class="empty-state-icon">🔍</div>
-                    <div class="empty-state-text">Нет NFT с такой редкостью</div>
-                </div>
-            `;
-            return;
-        }
+        // Показ ID с уведомлением
+        document.getElementById('profile_id').onclick = () => {
+            const userId = currentUser ? currentUser.id : 'Не определен';
+            showToast(`🆔 Ваш ID: ${userId}`);
+        };
         
-        container.innerHTML = filtered.map(nft => {
-            const priceSymbol = nft.currency === 'USDT' ? '💵' : nft.currency === 'TON' ? '🪙' : '⭐';
-            let rarityName = '';
-            if (nft.rarity === 'common') rarityName = 'Обычный';
-            else if (nft.rarity === 'rare') rarityName = 'Редкий';
-            else if (nft.rarity === 'epic') rarityName = 'Эпический';
-            else if (nft.rarity === 'legendary') rarityName = 'Легендарный';
+        // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+        function showToast(message, type = 'success') {
+            if (toastTimeout) clearTimeout(toastTimeout);
             
-            return `
-                <div class="nft-card" onclick='showNFTForBuy(${JSON.stringify(nft).replace(/'/g, "\\'")})'>
-                    <div class="nft-image">
-                        ${nft.image_url ? `<img src="${nft.image_url}" onerror="this.src='';this.parentElement.innerHTML='🎨'">` : '🎨'}
-                        ${nft.token_link ? `<a href="${nft.token_link}" target="_blank" class="nft-link" onclick="event.stopPropagation()">🔗</a>` : ''}
-                    </div>
-                    <div class="nft-info">
-                        <div class="nft-name">${escapeHtml(nft.name)}</div>
-                        <div class="nft-rarity rarity-${nft.rarity}">${rarityName}</div>
-                        <div class="nft-price ${nft.currency.toLowerCase()}">${priceSymbol} ${formatBalance(nft.price)} ${nft.currency}</div>
-                        <div class="nft-seller">👤 ${escapeHtml(nft.seller_name)}</div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    }
-    
-    function renderMyNFTs() {
-        const inventoryContainer = document.getElementById('inventory_grid');
-        const profileInventoryContainer = document.getElementById('profile_inventory_grid');
-        
-        if (!myNFTs || myNFTs.length === 0) {
-            const emptyHTML = `
-                <div class="empty-state" style="grid-column: 1/-1;">
-                    <div class="empty-state-icon">📦</div>
-                    <div class="empty-state-text">У вас пока нет NFT</div>
-                    <div class="empty-state-text">Чтобы получить NFT, обратитесь к менеджеру: <a href="${MANAGER_LINK}" style="color: #FFD700;">@${MANAGER_USERNAME}</a></div>
-                </div>
-            `;
-            if (inventoryContainer) inventoryContainer.innerHTML = emptyHTML;
-            if (profileInventoryContainer) profileInventoryContainer.innerHTML = emptyHTML;
-            return;
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
         }
         
-        const listedNFTs = myNFTs.filter(nft => nft.is_listed);
-        const unlistedNFTs = myNFTs.filter(nft => !nft.is_listed);
+        function sendToBot(action, data) {
+            const message = JSON.stringify({ action, data });
+            console.log('📤 Отправка в бота:', message);
+            tg.sendData(message);
+        }
         
-        const renderNFTs = (nfts, showUnlist = false) => {
-            return nfts.map(nft => {
+        function formatBalance(amount) {
+            return parseFloat(amount).toFixed(2);
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // ========== ЗАГРУЗКА ДАННЫХ ==========
+        function loadBalances() {
+            sendToBot('get_balance', {});
+        }
+        
+        function loadMarket() {
+            sendToBot('get_market', {});
+        }
+        
+        function loadMyNFTs() {
+            sendToBot('get_my_nfts', {});
+        }
+        
+        function loadTransactions() {
+            sendToBot('get_transactions', {});
+        }
+        
+        // ========== ОТОБРАЖЕНИЕ ==========
+        function renderMarket() {
+            const container = document.getElementById('market_grid');
+            
+            if (!marketData || marketData.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <div class="empty-state-icon">🎨</div>
+                        <div class="empty-state-text">Нет NFT в продаже</div>
+                        <div class="empty-state-text">Скоро здесь появятся новые предметы!</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            let filtered = marketData;
+            if (currentRarity !== 'all') {
+                filtered = marketData.filter(nft => nft.rarity === currentRarity);
+            }
+            
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <div class="empty-state-icon">🔍</div>
+                        <div class="empty-state-text">Нет NFT с такой редкостью</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = filtered.map(nft => {
                 const priceSymbol = nft.currency === 'USDT' ? '💵' : nft.currency === 'TON' ? '🪙' : '⭐';
                 let rarityName = '';
                 if (nft.rarity === 'common') rarityName = 'Обычный';
@@ -860,16 +825,8 @@
                 else if (nft.rarity === 'epic') rarityName = 'Эпический';
                 else if (nft.rarity === 'legendary') rarityName = 'Легендарный';
                 
-                const statusBadge = showUnlist ? 
-                    `<div style="font-size: 10px; color: #28a745; margin-top: 5px;">🟢 В продаже за ${formatBalance(nft.price)} ${nft.currency}</div>` :
-                    `<div style="font-size: 10px; color: #6c757d; margin-top: 5px;">🔒 Не в продаже</div>`;
-                
-                const onclickAction = showUnlist ? 
-                    `showUnlistModal(${JSON.stringify(nft).replace(/'/g, "\\'")})` :
-                    `showSellModal(${JSON.stringify(nft).replace(/'/g, "\\'")})`;
-                
                 return `
-                    <div class="nft-card" onclick='${onclickAction}'>
+                    <div class="nft-card" onclick='showNFTForBuy(${JSON.stringify(nft).replace(/'/g, "\\'")})'>
                         <div class="nft-image">
                             ${nft.image_url ? `<img src="${nft.image_url}" onerror="this.src='';this.parentElement.innerHTML='🎨'">` : '🎨'}
                             ${nft.token_link ? `<a href="${nft.token_link}" target="_blank" class="nft-link" onclick="event.stopPropagation()">🔗</a>` : ''}
@@ -877,345 +834,425 @@
                         <div class="nft-info">
                             <div class="nft-name">${escapeHtml(nft.name)}</div>
                             <div class="nft-rarity rarity-${nft.rarity}">${rarityName}</div>
-                            ${showUnlist ? `<div class="nft-price">${priceSymbol} ${formatBalance(nft.price)} ${nft.currency}</div>` : ''}
-                            ${statusBadge}
+                            <div class="nft-price ${nft.currency.toLowerCase()}">${priceSymbol} ${formatBalance(nft.price)} ${nft.currency}</div>
+                            <div class="nft-seller">👤 ${escapeHtml(nft.seller_name)}</div>
                         </div>
                     </div>
                 `;
             }).join('');
-        };
-        
-        let inventoryHTML = '';
-        if (unlistedNFTs.length > 0) {
-            inventoryHTML += `<div style="grid-column: 1/-1; margin: 10px 0 0 10px; color: rgba(255,255,255,0.5);">📦 ДОСТУПНЫ ДЛЯ ПРОДАЖИ</div>`;
-            inventoryHTML += renderNFTs(unlistedNFTs, false);
-        }
-        if (listedNFTs.length > 0) {
-            inventoryHTML += `<div style="grid-column: 1/-1; margin: 20px 0 0 10px; color: rgba(255,255,255,0.5);">🟢 В ПРОДАЖЕ</div>`;
-            inventoryHTML += renderNFTs(listedNFTs, true);
         }
         
-        if (inventoryContainer) inventoryContainer.innerHTML = inventoryHTML || '<div class="empty-state"><div class="empty-state-icon">📦</div><div>Нет доступных NFT</div></div>';
-        
-        let profileHTML = '';
-        if (unlistedNFTs.length > 0) {
-            profileHTML += `<div style="grid-column: 1/-1; margin: 10px 0 0 10px; color: rgba(255,255,255,0.5);">📦 НЕ В ПРОДАЖЕ</div>`;
-            profileHTML += renderNFTs(unlistedNFTs, false);
-        }
-        if (listedNFTs.length > 0) {
-            profileHTML += `<div style="grid-column: 1/-1; margin: 20px 0 0 10px; color: rgba(255,255,255,0.5);">🟢 В ПРОДАЖЕ</div>`;
-            profileHTML += renderNFTs(listedNFTs, true);
-        }
-        if (profileInventoryContainer) profileInventoryContainer.innerHTML = profileHTML || '<div class="empty-state"><div class="empty-state-icon">📦</div><div>Нет доступных NFT</div></div>';
-    }
-    
-    function renderTransactions() {
-        const container = document.getElementById('history_list');
-        
-        if (!transactions || transactions.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state-icon">📋</div>
-                    <div class="empty-state-text">История транзакций пуста</div>
-                </div>
-            `;
-            return;
-        }
-        
-        container.innerHTML = transactions.map(tx => {
-            let typeClass = '';
-            let typeText = '';
-            if (tx.type === 'sale') {
-                typeClass = 'sale';
-                typeText = '💰 Продажа NFT';
-            } else if (tx.type === 'withdraw') {
-                typeClass = 'withdraw';
-                typeText = '💸 Вывод средств';
-            } else if (tx.type === 'deposit') {
-                typeClass = 'deposit';
-                typeText = '💎 Пополнение';
-            } else {
-                typeText = tx.type;
+        function renderMyNFTs() {
+            const inventoryContainer = document.getElementById('inventory_grid');
+            const profileInventoryContainer = document.getElementById('profile_inventory_grid');
+            
+            if (!myNFTs || myNFTs.length === 0) {
+                const emptyHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <div class="empty-state-icon">📦</div>
+                        <div class="empty-state-text">У вас пока нет NFT</div>
+                        <div class="empty-state-text">Чтобы получить NFT, обратитесь к менеджеру: <a href="${MANAGER_LINK}" style="color: #FFD700;">@${MANAGER_USERNAME}</a></div>
+                    </div>
+                `;
+                if (inventoryContainer) inventoryContainer.innerHTML = emptyHTML;
+                if (profileInventoryContainer) profileInventoryContainer.innerHTML = emptyHTML;
+                return;
             }
             
-            return `
-                <div class="transaction-item">
-                    <div class="transaction-type ${typeClass}">${typeText}</div>
-                    <div class="transaction-amount">${tx.amount ? formatBalance(tx.amount) : ''} ${tx.currency || ''}</div>
-                    <div class="transaction-date">${tx.date || new Date().toLocaleString()}</div>
-                </div>
-            `;
-        }).join('');
-    }
-    
-    // ========== МОДАЛЬНЫЕ ОКНА ==========
-    function showNFTForBuy(nft) {
-        currentSelectedNFT = nft;
-        
-        const priceSymbol = nft.currency === 'USDT' ? '💵' : nft.currency === 'TON' ? '🪙' : '⭐';
-        let rarityName = '';
-        if (nft.rarity === 'common') rarityName = 'Обычный';
-        else if (nft.rarity === 'rare') rarityName = 'Редкий';
-        else if (nft.rarity === 'epic') rarityName = 'Эпический';
-        else if (nft.rarity === 'legendary') rarityName = 'Легендарный';
-        
-        document.getElementById('modal_name').innerHTML = `${nft.name} <span style="font-size: 14px; color: rgba(255,255,255,0.5);">(${rarityName})</span>`;
-        document.getElementById('modal_price').innerHTML = `${priceSymbol} ${formatBalance(nft.price)} ${nft.currency}`;
-        document.getElementById('modal_seller').innerHTML = `👤 Продавец: ${escapeHtml(nft.seller_name)}`;
-        
-        const modalImage = document.getElementById('modal_image');
-        if (nft.image_url) {
-            modalImage.innerHTML = `<img src="${nft.image_url}" onerror="this.src='';this.parentElement.innerHTML='🎨'">`;
-        } else {
-            modalImage.innerHTML = '🎨';
+            const listedNFTs = myNFTs.filter(nft => nft.is_listed);
+            const unlistedNFTs = myNFTs.filter(nft => !nft.is_listed);
+            
+            const renderNFTs = (nfts, showUnlist = false) => {
+                return nfts.map(nft => {
+                    const priceSymbol = nft.currency === 'USDT' ? '💵' : nft.currency === 'TON' ? '🪙' : '⭐';
+                    let rarityName = '';
+                    if (nft.rarity === 'common') rarityName = 'Обычный';
+                    else if (nft.rarity === 'rare') rarityName = 'Редкий';
+                    else if (nft.rarity === 'epic') rarityName = 'Эпический';
+                    else if (nft.rarity === 'legendary') rarityName = 'Легендарный';
+                    
+                    const statusBadge = showUnlist ? 
+                        `<div class="nft-status-badge status-listed">🟢 В продаже за ${formatBalance(nft.price)} ${nft.currency}</div>` :
+                        `<div class="nft-status-badge status-unlisted">🔒 Не в продаже</div>`;
+                    
+                    const onclickAction = showUnlist ? 
+                        `showUnlistModal(${JSON.stringify(nft).replace(/'/g, "\\'")})` :
+                        `showSellModal(${JSON.stringify(nft).replace(/'/g, "\\'")})`;
+                    
+                    return `
+                        <div class="nft-card" onclick='${onclickAction}'>
+                            <div class="nft-image">
+                                ${nft.image_url ? `<img src="${nft.image_url}" onerror="this.src='';this.parentElement.innerHTML='🎨'">` : '🎨'}
+                                ${nft.token_link ? `<a href="${nft.token_link}" target="_blank" class="nft-link" onclick="event.stopPropagation()">🔗</a>` : ''}
+                            </div>
+                            <div class="nft-info">
+                                <div class="nft-name">${escapeHtml(nft.name)}</div>
+                                <div class="nft-rarity rarity-${nft.rarity}">${rarityName}</div>
+                                ${showUnlist ? `<div class="nft-price">${priceSymbol} ${formatBalance(nft.price)} ${nft.currency}</div>` : ''}
+                                ${statusBadge}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            };
+            
+            let inventoryHTML = '';
+            if (unlistedNFTs.length > 0) {
+                inventoryHTML += `<div style="grid-column: 1/-1; margin: 10px 0 0 10px; color: rgba(255,255,255,0.5);">📦 ДОСТУПНЫ ДЛЯ ПРОДАЖИ</div>`;
+                inventoryHTML += renderNFTs(unlistedNFTs, false);
+            }
+            if (listedNFTs.length > 0) {
+                inventoryHTML += `<div style="grid-column: 1/-1; margin: 20px 0 0 10px; color: rgba(255,255,255,0.5);">🟢 В ПРОДАЖЕ</div>`;
+                inventoryHTML += renderNFTs(listedNFTs, true);
+            }
+            
+            if (inventoryContainer) inventoryContainer.innerHTML = inventoryHTML || '<div class="empty-state"><div class="empty-state-icon">📦</div><div>Нет доступных NFT</div></div>';
+            
+            let profileHTML = '';
+            if (unlistedNFTs.length > 0) {
+                profileHTML += `<div style="grid-column: 1/-1; margin: 10px 0 0 10px; color: rgba(255,255,255,0.5);">📦 НЕ В ПРОДАЖЕ</div>`;
+                profileHTML += renderNFTs(unlistedNFTs, false);
+            }
+            if (listedNFTs.length > 0) {
+                profileHTML += `<div style="grid-column: 1/-1; margin: 20px 0 0 10px; color: rgba(255,255,255,0.5);">🟢 В ПРОДАЖЕ</div>`;
+                profileHTML += renderNFTs(listedNFTs, true);
+            }
+            if (profileInventoryContainer) profileInventoryContainer.innerHTML = profileHTML || '<div class="empty-state"><div class="empty-state-icon">📦</div><div>Нет доступных NFT</div></div>';
         }
         
-        document.getElementById('modal').classList.add('active');
-    }
-    
-    function showSellModal(nft) {
-        currentSelectedNFT = nft;
-        document.getElementById('sell_modal_name').textContent = nft.name;
-        document.getElementById('sell_modal_image').innerHTML = nft.image_url ? 
-            `<img src="${nft.image_url}" onerror="this.src='';this.parentElement.innerHTML='🎨'">` : '🎨';
-        document.getElementById('sell_price').value = '';
-        document.getElementById('sell_currency').value = 'USDT';
-        document.getElementById('sell_modal').classList.add('active');
-    }
-    
-    function showUnlistModal(nft) {
-        currentSelectedNFT = nft;
-        document.getElementById('unlist_modal_name').textContent = nft.name;
-        document.getElementById('unlist_modal_image').innerHTML = nft.image_url ? 
-            `<img src="${nft.image_url}" onerror="this.src='';this.parentElement.innerHTML='🎨'">` : '🎨';
-        document.getElementById('unlist_modal').classList.add('active');
-    }
-    
-    // ========== ОБРАБОТЧИКИ ==========
-    document.getElementById('modal_buy_btn').onclick = () => {
-        window.open(MANAGER_LINK, '_blank');
-        document.getElementById('modal').classList.remove('active');
-    };
-    
-    document.getElementById('modal_cancel_btn').onclick = () => {
-        document.getElementById('modal').classList.remove('active');
-        currentSelectedNFT = null;
-    };
-    
-    document.getElementById('sell_confirm_btn').onclick = () => {
-        const price = parseFloat(document.getElementById('sell_price').value);
-        const currency = document.getElementById('sell_currency').value;
-        
-        if (isNaN(price) || price < 0.1) {
-            showToast('❌ Цена должна быть не менее 0.1', 'error');
-            return;
+        function renderTransactions() {
+            const container = document.getElementById('history_list');
+            
+            if (!transactions || transactions.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <div class="empty-state-text">История транзакций пуста</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = transactions.map(tx => {
+                let typeClass = '';
+                let typeText = '';
+                if (tx.type === 'sale') {
+                    typeClass = 'sale';
+                    typeText = '💰 Продажа NFT';
+                } else if (tx.type === 'withdraw') {
+                    typeClass = 'withdraw';
+                    typeText = '💸 Вывод средств';
+                } else if (tx.type === 'deposit') {
+                    typeClass = 'deposit';
+                    typeText = '💎 Пополнение';
+                } else {
+                    typeText = tx.type;
+                }
+                
+                return `
+                    <div class="transaction-item">
+                        <div class="transaction-type ${typeClass}">${typeText}</div>
+                        <div class="transaction-amount">${tx.amount ? formatBalance(tx.amount) : ''} ${tx.currency || ''}</div>
+                        <div class="transaction-date">${tx.date || new Date().toLocaleString()}</div>
+                    </div>
+                `;
+            }).join('');
         }
         
-        if (!currentSelectedNFT) return;
+        // ========== МОДАЛЬНЫЕ ОКНА ==========
+        function showNFTForBuy(nft) {
+            currentSelectedNFT = nft;
+            
+            const priceSymbol = nft.currency === 'USDT' ? '💵' : nft.currency === 'TON' ? '🪙' : '⭐';
+            let rarityName = '';
+            if (nft.rarity === 'common') rarityName = 'Обычный';
+            else if (nft.rarity === 'rare') rarityName = 'Редкий';
+            else if (nft.rarity === 'epic') rarityName = 'Эпический';
+            else if (nft.rarity === 'legendary') rarityName = 'Легендарный';
+            
+            document.getElementById('modal_name').innerHTML = `${nft.name} <span style="font-size: 14px; color: rgba(255,255,255,0.5);">(${rarityName})</span>`;
+            document.getElementById('modal_price').innerHTML = `${priceSymbol} ${formatBalance(nft.price)} ${nft.currency}`;
+            document.getElementById('modal_seller').innerHTML = `👤 Продавец: ${escapeHtml(nft.seller_name)}`;
+            
+            const modalImage = document.getElementById('modal_image');
+            if (nft.image_url) {
+                modalImage.innerHTML = `<img src="${nft.image_url}" onerror="this.src='';this.parentElement.innerHTML='🎨'">`;
+            } else {
+                modalImage.innerHTML = '🎨';
+            }
+            
+            document.getElementById('modal').classList.add('active');
+        }
         
-        sendToBot('list_nft', {
-            nft_id: currentSelectedNFT.id,
-            price: price,
-            currency: currency
+        function showSellModal(nft) {
+            currentSelectedNFT = nft;
+            document.getElementById('sell_modal_name').textContent = nft.name;
+            const sellModalImage = document.getElementById('sell_modal_image');
+            if (nft.image_url) {
+                sellModalImage.innerHTML = `<img src="${nft.image_url}" onerror="this.src='';this.parentElement.innerHTML='🎨'">`;
+            } else {
+                sellModalImage.innerHTML = '🎨';
+            }
+            document.getElementById('sell_price').value = '';
+            document.getElementById('sell_currency').value = 'USDT';
+            document.getElementById('sell_modal').classList.add('active');
+        }
+        
+        function showUnlistModal(nft) {
+            currentSelectedNFT = nft;
+            document.getElementById('unlist_modal_name').textContent = nft.name;
+            const unlistModalImage = document.getElementById('unlist_modal_image');
+            if (nft.image_url) {
+                unlistModalImage.innerHTML = `<img src="${nft.image_url}" onerror="this.src='';this.parentElement.innerHTML='🎨'">`;
+            } else {
+                unlistModalImage.innerHTML = '🎨';
+            }
+            document.getElementById('unlist_modal').classList.add('active');
+        }
+        
+        // ========== ОБРАБОТЧИКИ ==========
+        document.getElementById('modal_buy_btn').onclick = () => {
+            window.open(MANAGER_LINK, '_blank');
+            document.getElementById('modal').classList.remove('active');
+        };
+        
+        document.getElementById('modal_cancel_btn').onclick = () => {
+            document.getElementById('modal').classList.remove('active');
+            currentSelectedNFT = null;
+        };
+        
+        document.getElementById('sell_confirm_btn').onclick = () => {
+            const price = parseFloat(document.getElementById('sell_price').value);
+            const currency = document.getElementById('sell_currency').value;
+            
+            if (isNaN(price) || price < 0.1) {
+                showToast('❌ Цена должна быть не менее 0.1', 'error');
+                return;
+            }
+            
+            if (!currentSelectedNFT) return;
+            
+            sendToBot('list_nft', {
+                nft_id: currentSelectedNFT.id,
+                price: price,
+                currency: currency
+            });
+            
+            document.getElementById('sell_modal').classList.remove('active');
+            showToast('✅ NFT выставлен на продажу!', 'success');
+            setTimeout(() => {
+                loadMyNFTs();
+                loadMarket();
+            }, 1000);
+        };
+        
+        document.getElementById('sell_cancel_btn').onclick = () => {
+            document.getElementById('sell_modal').classList.remove('active');
+            currentSelectedNFT = null;
+        };
+        
+        document.getElementById('unlist_confirm_btn').onclick = () => {
+            if (!currentSelectedNFT) return;
+            sendToBot('unlist_nft', { nft_id: currentSelectedNFT.id });
+            document.getElementById('unlist_modal').classList.remove('active');
+            showToast('✅ NFT снят с продажи', 'success');
+            setTimeout(() => {
+                loadMyNFTs();
+                loadMarket();
+            }, 1000);
+        };
+        
+        document.getElementById('unlist_cancel_btn').onclick = () => {
+            document.getElementById('unlist_modal').classList.remove('active');
+            currentSelectedNFT = null;
+        };
+        
+        document.getElementById('withdraw_btn').onclick = () => {
+            const amount = parseFloat(document.getElementById('withdraw_amount').value);
+            
+            if (isNaN(amount) || amount < 1) {
+                showToast('❌ Минимальная сумма вывода: 1 USDT', 'error');
+                return;
+            }
+            
+            sendToBot('create_withdraw', { amount: amount });
+            
+            document.getElementById('withdraw_amount').value = '';
+            showToast('✅ Заявка на вывод создана! Менеджер свяжется с вами', 'success');
+        };
+        
+        // Фильтры
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.onclick = () => {
+                document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                currentRarity = chip.dataset.rarity;
+                renderMarket();
+            };
         });
         
-        document.getElementById('sell_modal').classList.remove('active');
-        showToast('✅ NFT выставлен на продажу!', 'success');
-        setTimeout(() => {
-            loadMyNFTs();
-            loadMarket();
-        }, 1000);
-    };
-    
-    document.getElementById('sell_cancel_btn').onclick = () => {
-        document.getElementById('sell_modal').classList.remove('active');
-        currentSelectedNFT = null;
-    };
-    
-    document.getElementById('unlist_confirm_btn').onclick = () => {
-        if (!currentSelectedNFT) return;
-        sendToBot('unlist_nft', { nft_id: currentSelectedNFT.id });
-        document.getElementById('unlist_modal').classList.remove('active');
-        showToast('✅ NFT снят с продажи', 'success');
-        setTimeout(() => {
-            loadMyNFTs();
-            loadMarket();
-        }, 1000);
-    };
-    
-    document.getElementById('unlist_cancel_btn').onclick = () => {
-        document.getElementById('unlist_modal').classList.remove('active');
-        currentSelectedNFT = null;
-    };
-    
-    document.getElementById('withdraw_btn').onclick = () => {
-        const amount = parseFloat(document.getElementById('withdraw_amount').value);
+        // Профиль табы
+        document.querySelectorAll('.profile-btn').forEach(btn => {
+            btn.onclick = () => {
+                const tab = btn.dataset.profileTab;
+                
+                document.querySelectorAll('.profile-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                document.querySelectorAll('.profile-section').forEach(s => s.classList.remove('active'));
+                document.getElementById(`profile_${tab}`).classList.add('active');
+                
+                if (tab === 'inventory') {
+                    loadMyNFTs();
+                } else if (tab === 'history') {
+                    loadTransactions();
+                }
+            };
+        });
         
-        if (isNaN(amount) || amount < 1) {
-            showToast('❌ Минимальная сумма вывода: 1 USDT', 'error');
-            return;
-        }
-        
-        sendToBot('create_withdraw', { amount: amount });
-        
-        document.getElementById('withdraw_amount').value = '';
-        showToast('✅ Заявка на вывод создана! Менеджер свяжется с вами', 'success');
-    };
-    
-    // Фильтры
-    document.querySelectorAll('.filter-chip').forEach(chip => {
-        chip.onclick = () => {
-            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-            chip.classList.add('active');
-            currentRarity = chip.dataset.rarity;
-            renderMarket();
+        // Принятие правил
+        document.getElementById('accept_rules_btn').onclick = () => {
+            sendToBot('accept_rules', {});
+            showToast('⏳ Принятие правил...', 'success');
         };
-    });
-    
-    // Профиль табы
-    document.querySelectorAll('.profile-btn').forEach(btn => {
-        btn.onclick = () => {
-            const tab = btn.dataset.profileTab;
-            
-            document.querySelectorAll('.profile-section').forEach(s => s.classList.remove('active'));
-            document.getElementById(`profile_${tab}`).classList.add('active');
-            
-            if (tab === 'inventory') {
-                loadMyNFTs();
-            } else if (tab === 'history') {
-                loadTransactions();
+        
+        // Навигация
+        function switchView(view) {
+            if (!rulesAccepted && view !== 'rules') {
+                showToast('❌ Сначала примите правила', 'error');
+                return;
             }
-        };
-    });
-    
-    // Принятие правил
-    document.getElementById('accept_rules_btn').onclick = () => {
-        sendToBot('accept_rules', {});
-        showToast('⏳ Принятие правил...', 'success');
-    };
-    
-    // Навигация
-    function switchView(view) {
-        currentView = view;
-        
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.getElementById(`${view}_section`).classList.add('active');
+            
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(`${view}_section`).classList.add('active');
+            
+            document.querySelectorAll('.nav-item').forEach(nav => {
+                if (nav.dataset.nav === view) {
+                    nav.classList.add('active');
+                } else {
+                    nav.classList.remove('active');
+                }
+            });
+            
+            if (view === 'buy') {
+                loadMarket();
+                loadBalances();
+            } else if (view === 'sell') {
+                loadMyNFTs();
+                loadBalances();
+            } else if (view === 'profile') {
+                document.getElementById('profile_inventory').classList.add('active');
+                document.getElementById('profile_withdraw').classList.remove('active');
+                document.getElementById('profile_history').classList.remove('active');
+                document.querySelectorAll('.profile-btn').forEach(b => b.classList.remove('active'));
+                document.querySelector('.profile-btn[data-profile-tab="inventory"]').classList.add('active');
+                loadMyNFTs();
+                loadBalances();
+            }
+        }
         
         document.querySelectorAll('.nav-item').forEach(nav => {
-            if (nav.dataset.nav === view) {
-                nav.classList.add('active');
-            } else {
-                nav.classList.remove('active');
+            nav.onclick = () => switchView(nav.dataset.nav);
+        });
+        
+        // ========== ОБРАБОТКА ДАННЫХ ОТ БОТА ==========
+        window.handleBotResponse = function(response) {
+            console.log('📥 Получено от бота:', response);
+            try {
+                let data;
+                if (typeof response === 'string') {
+                    data = JSON.parse(response);
+                } else {
+                    data = response;
+                }
+                
+                // Принятие правил
+                if (data.success === true && (data.message === 'Правила приняты!' || data.message === 'accept_rules')) {
+                    rulesAccepted = true;
+                    showToast('✅ Правила приняты!', 'success');
+                    switchView('profile');
+                    loadBalances();
+                    loadMyNFTs();
+                    return;
+                }
+                
+                // Баланс
+                if (data.usdt !== undefined) {
+                    document.getElementById('usdt_balance').textContent = formatBalance(data.usdt);
+                    document.getElementById('ton_balance').textContent = formatBalance(data.ton || 0);
+                    document.getElementById('stars_balance').textContent = formatBalance(data.stars || 0);
+                    return;
+                }
+                
+                // Массив данных - рынок
+                if (Array.isArray(data) && data.length > 0 && data[0].seller_name !== undefined) {
+                    marketData = data;
+                    renderMarket();
+                    return;
+                }
+                
+                // Массив данных - мои NFT
+                if (Array.isArray(data) && data.length > 0 && (data[0].owner_id !== undefined || data[0].is_listed !== undefined)) {
+                    myNFTs = data;
+                    renderMyNFTs();
+                    return;
+                }
+                
+                // Массив данных - транзакции
+                if (Array.isArray(data) && data.length > 0 && data[0].type !== undefined) {
+                    transactions = data;
+                    renderTransactions();
+                    return;
+                }
+                
+                // Проверка правил
+                if (data.rules_accepted !== undefined) {
+                    rulesAccepted = data.rules_accepted;
+                    if (!rulesAccepted) {
+                        switchView('rules');
+                    } else {
+                        switchView('profile');
+                        loadBalances();
+                        loadMyNFTs();
+                    }
+                    return;
+                }
+                
+                // Успешная операция
+                if (data.success === true) {
+                    showToast(data.message || '✅ Операция выполнена', 'success');
+                    if (data.new_balance !== undefined) {
+                        document.getElementById('usdt_balance').textContent = formatBalance(data.new_balance);
+                    }
+                    setTimeout(() => {
+                        loadBalances();
+                        loadMyNFTs();
+                        loadMarket();
+                    }, 1000);
+                    return;
+                }
+                
+                // Ошибка
+                if (data.error === true || data.error) {
+                    showToast(data.message || '❌ Ошибка операции', 'error');
+                    return;
+                }
+                
+            } catch(e) {
+                console.log('❌ Ошибка парсинга:', e);
+            }
+        };
+        
+        // Перехват ответов от бота
+        tg.onEvent('web_app_data', function(event) {
+            if (event.data) {
+                window.handleBotResponse(event.data);
             }
         });
         
-        if (view === 'buy') {
-            loadMarket();
-            loadBalances();
-        } else if (view === 'sell') {
-            loadMyNFTs();
-            loadBalances();
-        } else if (view === 'profile') {
-            document.getElementById('profile_inventory').classList.add('active');
-            document.getElementById('profile_withdraw').classList.remove('active');
-            document.getElementById('profile_history').classList.remove('active');
-            loadMyNFTs();
-            loadBalances();
-        }
-    }
-    
-    document.querySelectorAll('.nav-item').forEach(nav => {
-        nav.onclick = () => {
-            if (rulesAccepted) {
-                switchView(nav.dataset.nav);
-            } else {
-                showToast('❌ Сначала примите правила', 'error');
-            }
-        };
-    });
-    
-    // ========== ОБРАБОТКА ДАННЫХ ОТ БОТА ==========
-    window.handleBotResponse = function(response) {
-        console.log('📥 Получено от бота:', response);
-        try {
-            let data;
-            if (typeof response === 'string') {
-                data = JSON.parse(response);
-            } else {
-                data = response;
-            }
-            
-            // Принятие правил - упрощенная проверка
-            if (data.success === true && (data.message === 'Правила приняты!' || data.message === 'accept_rules')) {
-                rulesAccepted = true;
-                showToast('✅ Правила приняты!', 'success');
-                // Переключаемся на профиль
-                switchView('profile');
-                loadBalances();
-                loadMyNFTs();
-                return;
-            }
-            
-            // Баланс
-            if (data.usdt !== undefined) {
-                document.getElementById('usdt_balance').textContent = formatBalance(data.usdt);
-                document.getElementById('ton_balance').textContent = formatBalance(data.ton || 0);
-                document.getElementById('stars_balance').textContent = formatBalance(data.stars || 0);
-                return;
-            }
-            
-            // Массив данных
-            if (Array.isArray(data)) {
-                if (data.length > 0 && data[0].seller_name !== undefined) {
-                    marketData = data;
-                    renderMarket();
-                } else if (data.length > 0 && (data[0].owner_id !== undefined || data[0].is_listed !== undefined)) {
-                    myNFTs = data;
-                    renderMyNFTs();
-                } else if (data.length > 0 && data[0].type !== undefined) {
-                    transactions = data;
-                    renderTransactions();
-                }
-                return;
-            }
-            
-            // Успешная операция
-            if (data.success === true) {
-                showToast(data.message || '✅ Операция выполнена', 'success');
-                if (data.new_balance !== undefined) {
-                    document.getElementById('usdt_balance').textContent = formatBalance(data.new_balance);
-                }
-                setTimeout(() => {
-                    loadBalances();
-                    loadMyNFTs();
-                    loadMarket();
-                }, 1000);
-                return;
-            }
-            
-            // Ошибка
-            if (data.error === true || data.error) {
-                showToast(data.message || '❌ Ошибка операции', 'error');
-                return;
-            }
-            
-        } catch(e) {
-            console.log('❌ Ошибка парсинга:', e);
-        }
-    };
-    
-    // Перехват ответов от бота
-    tg.onEvent('web_app_data', function(event) {
-        if (event.data) {
-            window.handleBotResponse(event.data);
-        }
-    });
-    
-    // Запуск
-    loadBalances();
-    
-    // Проверяем правила
-    sendToBot('check_rules', {});
-</script>
+        // Запуск
+        loadBalances();
+        sendToBot('check_rules', {});
+    </script>
 </body>
 </html>
