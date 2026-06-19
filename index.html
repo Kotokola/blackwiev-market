@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFT Market | Telegram</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fa-brands fa-telegram"></i>
+                    <span>NFT Market</span>
+                </div>
+                <nav class="nav">
+                    <a href="#catalog" class="nav-link">Каталог</a>
+                    <a href="#featured" class="nav-link">Популярное</a>
+                    <a href="#about" class="nav-link">О нас</a>
+                </nav>
+                <button class="btn-primary" onclick="openTelegram()">
+                    <i class="fa-brands fa-telegram"></i>
+                    Открыть в Telegram
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1>NFT Маркет</h1>
+                    <p class="hero-subtitle">Уникальные цифровые коллекции в Telegram</p>
+                    <p class="hero-description">Откройте для себя мир эксклюзивных NFT. Покупайте, продавайте и коллекционируйте цифровые активы прямо в Telegram.</p>
+                    <div class="hero-buttons">
+                        <button class="btn-primary btn-large" onclick="scrollToCatalog()">
+                            <i class="fa-solid fa-store"></i>
+                            Смотреть каталог
+                        </button>
+                        <button class="btn-secondary btn-large" onclick="openTelegram()">
+                            <i class="fa-brands fa-telegram"></i>
+                            Подключить бота
+                        </button>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <div class="nft-card featured">
+                        <div class="nft-image">
+                            <img src="https://images.unsplash.com/photo-1634986666676-ec8fd927c23d?w=400&h=400&fit=crop" alt="Featured NFT">
+                        </div>
+                        <div class="nft-info">
+                            <div class="nft-badge">⭐ Популярное</div>
+                            <h3>Кибер Панда #001</h3>
+                            <div class="nft-meta">
+                                <span class="rarity legendary">Legendary</span>
+                                <span class="price">1.5 USDT</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fa-solid fa-cube"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">10,000+</div>
+                        <div class="stat-label">NFT коллекций</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">50,000+</div>
+                        <div class="stat-label">Пользователей</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fa-solid fa-dollar-sign"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">$1M+</div>
+                        <div class="stat-label">Оборот</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fa-solid fa-fire"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">24/7</div>
+                        <div class="stat-label">Поддержка</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Catalog Section -->
+    <section class="catalog" id="catalog">
+        <div class="container">
+            <div class="section-header">
+                <h2>Каталог NFT</h2>
+                <div class="filter-tabs">
+                    <button class="filter-tab active" data-filter="all">Все</button>
+                    <button class="filter-tab" data-filter="art">Арт</button>
+                    <button class="filter-tab" data-filter="gaming">Игры</button>
+                    <button class="filter-tab" data-filter="music">Музыка</button>
+                    <button class="filter-tab" data-filter="collectibles">Коллекции</button>
+                </div>
+            </div>
+
+            <div class="nft-grid" id="nftGrid">
+                <!-- NFT Cards will be generated by JavaScript -->
+            </div>
+
+            <div class="load-more">
+                <button class="btn-secondary" id="loadMoreBtn">
+                    <i class="fa-solid fa-plus"></i>
+                    Загрузить ещё
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Section -->
+    <section class="featured" id="featured">
+        <div class="container">
+            <div class="section-header">
+                <h2>🔥 Популярное</h2>
+                <p>Самые востребованные NFT этой недели</p>
+            </div>
+            <div class="featured-grid">
+                <div class="featured-item">
+                    <div class="featured-image">
+                        <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300&h=300&fit=crop" alt="NFT">
+                        <div class="featured-badge">#1</div>
+                    </div>
+                    <div class="featured-info">
+                        <h4>Космический Кот</h4>
+                        <div class="featured-meta">
+                            <span class="price">2.5 USDT</span>
+                            <span class="volume">125 продаж</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="featured-item">
+                    <div class="featured-image">
+                        <img src="https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=300&h=300&fit=crop" alt="NFT">
+                        <div class="featured-badge">#2</div>
+                    </div>
+                    <div class="featured-info">
+                        <h4>Неоновый Город</h4>
+                        <div class="featured-meta">
+                            <span class="price">1.8 USDT</span>
+                            <span class="volume">98 продаж</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="featured-item">
+                    <div class="featured-image">
+                        <img src="https://images.unsplash.com/photo-1642104704074-907c0698cbd9?w=300&h=300&fit=crop" alt="NFT">
+                        <div class="featured-badge">#3</div>
+                    </div>
+                    <div class="featured-info">
+                        <h4>Цифровой Дракон</h4>
+                        <div class="featured-meta">
+                            <span class="price">3.2 USDT</span>
+                            <span class="volume">87 продаж</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about" id="about">
+        <div class="container">
+            <div class="about-content">
+                <div class="about-text">
+                    <h2>О нашем NFT Market</h2>
+                    <p>Мы создали инновационную платформу для торговли NFT прямо в Telegram. Наша миссия — сделать цифровые коллекции доступными для каждого.</p>
+                    <div class="features">
+                        <div class="feature">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            <h3>Безопасно</h3>
+                            <p>Все транзакции защищены и прозрачны</p>
+                        </div>
+                        <div class="feature">
+                            <i class="fa-solid fa-bolt"></i>
+                            <h3>Быстро</h3>
+                            <p>Мгновенные транзакции в USDT</p>
+                        </div>
+                        <div class="feature">
+                            <i class="fa-solid fa-mobile-screen"></i>
+                            <h3>Удобно</h3>
+                            <p>Полная интеграция с Telegram</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-image">
+                    <div class="about-card">
+                        <img src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&h=300&fit=crop" alt="About">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <i class="fa-brands fa-telegram"></i>
+                        <span>NFT Market</span>
+                    </div>
+                    <p>Инновационная платформа для торговли NFT в Telegram</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Навигация</h4>
+                    <ul>
+                        <li><a href="#catalog">Каталог</a></li>
+                        <li><a href="#featured">Популярное</a></li>
+                        <li><a href="#about">О нас</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Поддержка</h4>
+                    <ul>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Контакты</a></li>
+                        <li><a href="#">Правила</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Социальные сети</h4>
+                    <div class="social-links">
+                        <a href="#" class="social-link"><i class="fa-brands fa-telegram"></i></a>
+                        <a href="#" class="social-link"><i class="fa-brands fa-twitter"></i></a>
+                        <a href="#" class="social-link"><i class="fa-brands fa-discord"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 NFT Market. Все права защищены.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal -->
+    <div class="modal" id="nftModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">
+                <i class="fa-solid fa-times"></i>
+            </button>
+            <div class="modal-body">
+                <div class="modal-image">
+                    <img id="modalImage" src="" alt="NFT">
+                </div>
+                <div class="modal-info">
+                    <div class="modal-badge" id="modalRarity">Legendary</div>
+                    <h2 id="modalTitle">Название NFT</h2>
+                    <div class="modal-meta">
+                        <span class="price" id="modalPrice">1.5 USDT</span>
+                        <span class="category" id="modalCategory">Арт</span>
+                    </div>
+                    <p id="modalDescription">Описание NFT...</p>
+                    <div class="modal-stats">
+                        <div class="modal-stat">
+                            <span class="stat-label">Владелец</span>
+                            <span class="stat-value" id="modalOwner">@username</span>
+                        </div>
+                        <div class="modal-stat">
+                            <span class="stat-label">Создано</span>
+                            <span class="stat-value" id="modalCreated">2024</span>
+                        </div>
+                        <div class="modal-stat">
+                            <span class="stat-label">Серийный номер</span>
+                            <span class="stat-value" id="modalSerial">#001</span>
+                        </div>
+                    </div>
+                    <button class="btn-primary btn-large" onclick="buyNFT()">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                        Купить в Telegram
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seasonal Effects (backend UI only) -->
+    <div class="seasonal-effects" id="seasonalEffects" aria-hidden="true">
+        <!-- Summer effects -->
+        <div class="sun-rays" id="sunRays">
+            <div class="ray"></div><div class="ray"></div><div class="ray"></div><div class="ray"></div>
+            <div class="ray"></div><div class="ray"></div><div class="ray"></div><div class="ray"></div>
+        </div>
+
+        <!-- Autumn effects -->
+        <div class="falling-leaves" id="fallingLeaves"></div>
+
+        <!-- Winter effects -->
+        <div class="snowflakes" id="snowflakes"></div>
+
+        <!-- Spring effects -->
+        <div class="falling-flowers" id="fallingFlowers"></div>
+    </div>
+
+    <!-- Season Toggle -->
+    <div class="season-toggle">
+        <button class="season-btn" data-season="summer" title="Лето">
+            <i class="fa-solid fa-sun"></i>
+        </button>
+        <button class="season-btn" data-season="autumn" title="Осень">
+            <i class="fa-solid fa-leaf"></i>
+        </button>
+        <button class="season-btn" data-season="winter" title="Зима">
+            <i class="fa-solid fa-snowflake"></i>
+        </button>
+        <button class="season-btn" data-season="spring" title="Весна">
+            <i class="fa-solid fa-flower"></i>
+        </button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
