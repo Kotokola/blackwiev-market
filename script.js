@@ -22,7 +22,6 @@
         userId: null,
         userName: null,
         userUsername: null,
-        userAvatar: null,
         balances: { USDT: 0, TON: 0, STARS: 0 },
         selectedNftForSell: null,
         selectedNftForBuy: null,
@@ -39,9 +38,7 @@
         const app = getTgApp();
         if (!app) {
             console.warn('❌ Telegram WebApp не найден');
-            // Демо-режим: имитируем ответ
-            simulateBackendResponse(data);
-            return true;
+            return false;
         }
         try {
             const jsonData = JSON.stringify(data);
@@ -52,81 +49,6 @@
             console.error('❌ Ошибка отправки:', e);
             return false;
         }
-    }
-
-    // ===== ДЕМО-РЕЖИМ ДЛЯ ТЕСТИРОВАНИЯ =====
-    function simulateBackendResponse(data) {
-        console.log('🎮 Демо-режим: имитация ответа на:', data.action);
-        
-        setTimeout(() => {
-            const mockResponse = { action: data.action };
-            
-            switch (data.action) {
-                case ACTIONS.ACCEPT_RULES:
-                    mockResponse.success = true;
-                    mockResponse.message = 'Правила приняты';
-                    handleBackendMessage(mockResponse);
-                    break;
-                    
-                case ACTIONS.GET_BALANCE:
-                    mockResponse.balance = {
-                        USDT: 1250.50,
-                        TON: 45.25,
-                        STARS: 320.00
-                    };
-                    handleBackendMessage(mockResponse);
-                    break;
-                    
-                case ACTIONS.GET_MY_NFTS:
-                    mockResponse.items = [
-                        { id: 1, name: 'CyberPunk #001', rarity: 'Legendary', image: 'https://via.placeholder.com/200/6C5CE7/fff?text=CyberPunk' },
-                        { id: 2, name: 'SpaceCat #042', rarity: 'Epic', image: 'https://via.placeholder.com/200/00D2FF/fff?text=SpaceCat' },
-                        { id: 3, name: 'Dragon Egg #777', rarity: 'Rare', image: 'https://via.placeholder.com/200/FFD93D/000?text=Dragon' }
-                    ];
-                    handleBackendMessage(mockResponse);
-                    break;
-                    
-                case ACTIONS.GET_MARKET:
-                    mockResponse.items = [
-                        { id: 101, name: 'CyberPunk #001', rarity: 'Legendary', price: 250, currency: 'USDT', owner_username: 'seller1', image: 'https://via.placeholder.com/300/6C5CE7/fff?text=CyberPunk' },
-                        { id: 102, name: 'SpaceCat #042', rarity: 'Epic', price: 120, currency: 'TON', owner_username: 'seller2', image: 'https://via.placeholder.com/300/00D2FF/fff?text=SpaceCat' },
-                        { id: 103, name: 'Dragon Egg #777', rarity: 'Rare', price: 75, currency: 'STARS', owner_username: 'seller3', image: 'https://via.placeholder.com/300/FFD93D/000?text=Dragon' },
-                        { id: 104, name: 'Galaxy Fox #012', rarity: 'Common', price: 30, currency: 'USDT', owner_username: 'seller4', image: 'https://via.placeholder.com/300/FF6B6B/fff?text=Fox' }
-                    ];
-                    handleBackendMessage(mockResponse);
-                    break;
-                    
-                case ACTIONS.GET_MY_TX:
-                    mockResponse.transactions = [
-                        { type: 'Пополнение', amount: 100, currency: 'USDT', status: '✅ Завершено', date: '2026-06-20 14:30' },
-                        { type: 'Продажа', amount: 250, currency: 'USDT', status: '✅ Завершено', date: '2026-06-19 10:15' },
-                        { type: 'Вывод', amount: -50, currency: 'TON', status: '⏳ В обработке', date: '2026-06-18 09:00' }
-                    ];
-                    handleBackendMessage(mockResponse);
-                    break;
-                    
-                case ACTIONS.LIST_NFT:
-                    mockResponse.success = true;
-                    mockResponse.message = 'NFT успешно выставлен на продажу';
-                    handleBackendMessage(mockResponse);
-                    break;
-                    
-                case ACTIONS.CREATE_PURCHASE_REQUEST:
-                    mockResponse.success = true;
-                    mockResponse.message = 'Заявка на покупку создана';
-                    handleBackendMessage(mockResponse);
-                    break;
-                    
-                case ACTIONS.CREATE_WITHDRAW_REQUEST:
-                    mockResponse.success = true;
-                    mockResponse.message = 'Заявка на вывод создана';
-                    handleBackendMessage(mockResponse);
-                    break;
-                    
-                default:
-                    console.log('⚠️ Неизвестное действие:', data.action);
-            }
-        }, 500);
     }
 
     // ===== SCREEN MANAGEMENT =====
@@ -166,10 +88,19 @@
             STARS: Number(bal.STARS ?? bal.stars ?? bal.stars_balance ?? 0)
         };
 
+        // Обновляем баланс в хедере
         ['balUsdt', 'balTon', 'balStars'].forEach(id => {
             const el = $(id);
             if (!el) return;
             const key = id.replace('bal', '').toUpperCase();
+            el.textContent = (state.balances[key] || 0).toFixed(2);
+        });
+
+        // Обновляем баланс в выводе
+        ['withdrawBalUsdt', 'withdrawBalTon', 'withdrawBalStars'].forEach(id => {
+            const el = $(id);
+            if (!el) return;
+            const key = id.replace('withdrawBal', '').toUpperCase();
             el.textContent = (state.balances[key] || 0).toFixed(2);
         });
     }
@@ -193,7 +124,10 @@
             }
 
             setStatus('rulesStatus', '⏳ Обработка...', 'info');
-            sendToBackend({ action: ACTIONS.ACCEPT_RULES });
+            const success = sendToBackend({ action: ACTIONS.ACCEPT_RULES });
+            if (!success) {
+                setStatus('rulesStatus', '❌ Ошибка отправки в бот', 'danger');
+            }
         });
     }
 
@@ -254,12 +188,15 @@
                 }
 
                 setStatus('sellStatus', '⏳ Отправка...', 'info');
-                sendToBackend({
+                const success = sendToBackend({
                     action: ACTIONS.LIST_NFT,
                     nft_id: state.selectedNftForSell.id,
                     price: price,
                     currency: currency
                 });
+                if (!success) {
+                    setStatus('sellStatus', '❌ Ошибка отправки в бот', 'danger');
+                }
             });
         }
 
@@ -336,12 +273,15 @@
                     return;
                 }
                 setStatus('modalBuyStatus', '⏳ Отправка заявки...', 'info');
-                sendToBackend({
+                const success = sendToBackend({
                     action: ACTIONS.CREATE_PURCHASE_REQUEST,
                     nft_id: state.selectedNftForBuy.id,
                     offer_price: state.selectedNftForBuy.price,
                     currency: state.selectedNftForBuy.currency || 'USDT'
                 });
+                if (!success) {
+                    setStatus('modalBuyStatus', '❌ Ошибка отправки в бот', 'danger');
+                }
             });
         }
 
@@ -430,11 +370,10 @@
     function initProfile() {
         const app = getTgApp();
         const user = app?.initDataUnsafe?.user || {};
-        state.userId = user.id || '123456789';
-        state.userName = user.first_name || user.username || 'Тестовый Пользователь';
-        state.userUsername = user.username ? '@' + user.username : '@testuser';
+        state.userId = user.id || null;
+        state.userName = user.first_name || user.username || 'Пользователь';
+        state.userUsername = user.username ? '@' + user.username : '—';
 
-        const avatarEl = $('profileAvatar');
         const nameEl = $('profileName');
         const usernameEl = $('profileUsername');
         const idEl = $('profileId');
@@ -503,13 +442,21 @@
                     return;
                 }
 
+                if (!wallet || wallet.trim().length < 5) {
+                    setStatus('withdrawStatus', '⚠️ Введите адрес кошелька', 'warning');
+                    return;
+                }
+
                 setStatus('withdrawStatus', '⏳ Создание заявки...', 'info');
-                sendToBackend({
+                const success = sendToBackend({
                     action: ACTIONS.CREATE_WITHDRAW_REQUEST,
-                    currency,
-                    amount,
-                    wallet_address: wallet || null
+                    currency: currency,
+                    amount: amount,
+                    wallet_address: wallet.trim()
                 });
+                if (!success) {
+                    setStatus('withdrawStatus', '❌ Ошибка отправки в бот', 'danger');
+                }
             });
         }
     }
@@ -568,6 +515,14 @@
             el.className = 'tx-item';
             const amount = tx.amount ?? tx.value ?? 0;
             const isPositive = amount > 0;
+            const statusMap = {
+                'pending': '⏳ Ожидает',
+                'completed': '✅ Завершено',
+                'cancelled': '❌ Отменено',
+                'processing': '🔄 В обработке'
+            };
+            const statusText = statusMap[tx.status] || tx.status || tx.details || '';
+            
             el.innerHTML = `
                 <div class="tx-item-left">
                     <span class="tx-item-type">${escapeHtml(tx.type || tx.action || 'Транзакция')}</span>
@@ -577,7 +532,7 @@
                     <span class="tx-item-amount ${isPositive ? 'positive' : 'negative'}">
                         ${isPositive ? '+' : ''}${amount} ${escapeHtml(tx.currency || '')}
                     </span>
-                    <span class="tx-item-status">${escapeHtml(tx.status || tx.details || '')}</span>
+                    <span class="tx-item-status">${escapeHtml(statusText)}</span>
                 </div>
             `;
             list.appendChild(el);
@@ -630,15 +585,18 @@
         const payload = data.result || data.data || data;
         const action = data.action || data.type || payload?.action || payload?.type;
 
+        // Обработка принятия правил
         if (action === 'accept_nft_rules' || action === ACTIONS.ACCEPT_RULES) {
             state.isRulesAccepted = true;
-            setStatus('rulesStatus', '✅ Правила приняты!', 'success');
-            setTimeout(() => {
-                showScreen('main');
-                requestBalance();
-                requestMyNfts();
-                requestMarket();
-            }, 500);
+            if (data.success !== false) {
+                setStatus('rulesStatus', '✅ Правила приняты!', 'success');
+                setTimeout(() => {
+                    showScreen('main');
+                    requestBalance();
+                }, 500);
+            } else {
+                setStatus('rulesStatus', '❌ ' + (data.error || 'Ошибка принятия правил'), 'danger');
+            }
             return;
         }
 
@@ -663,40 +621,47 @@
                 break;
 
             case ACTIONS.CREATE_PURCHASE_REQUEST:
-                setStatus('modalBuyStatus', payload?.success ? '✅ Заявка отправлена!' : '❌ ' + (payload?.error || 'Ошибка'), payload?.success ? 'success' : 'danger');
-                if (payload?.success) {
+                if (payload?.success !== false) {
+                    setStatus('modalBuyStatus', '✅ Заявка на покупку отправлена! Напишите админу @ggyyert', 'success');
                     setTimeout(() => {
                         closeModal();
                         requestMarket();
-                    }, 1500);
+                    }, 2000);
+                } else {
+                    setStatus('modalBuyStatus', '❌ ' + (payload?.error || 'Ошибка создания заявки'), 'danger');
                 }
                 break;
 
             case ACTIONS.CREATE_WITHDRAW_REQUEST:
-                setStatus('withdrawStatus', payload?.success ? '✅ Заявка создана!' : '❌ ' + (payload?.error || 'Ошибка'), payload?.success ? 'success' : 'danger');
-                if (payload?.success) {
+                if (payload?.success !== false) {
+                    setStatus('withdrawStatus', '✅ Заявка на вывод создана! Напишите админу @ggyyert', 'success');
                     setTimeout(() => {
                         requestBalance();
                         const amountInput = $('withdrawAmountInput');
                         const walletInput = $('withdrawWalletInput');
                         if (amountInput) amountInput.value = '';
                         if (walletInput) walletInput.value = '';
-                    }, 1000);
+                    }, 2000);
+                } else {
+                    setStatus('withdrawStatus', '❌ ' + (payload?.error || 'Ошибка создания заявки'), 'danger');
                 }
                 break;
 
             case ACTIONS.LIST_NFT:
-                setStatus('sellStatus', payload?.success ? '✅ NFT выставлен на продажу!' : '❌ ' + (payload?.error || 'Ошибка'), payload?.success ? 'success' : 'danger');
-                if (payload?.success) {
+                if (payload?.success !== false) {
+                    setStatus('sellStatus', '✅ NFT выставлен на продажу!', 'success');
                     setTimeout(() => {
                         showScreen('main');
                         requestBalance();
                         requestMarket();
                     }, 1500);
+                } else {
+                    setStatus('sellStatus', '❌ ' + (payload?.error || 'Ошибка выставления NFT'), 'danger');
                 }
                 break;
 
             default:
+                // Если не распознали действие, но есть данные баланса
                 if (payload?.usdt_balance !== undefined || payload?.balance) {
                     updateBalance(payload);
                 }
@@ -711,6 +676,7 @@
         if (app) {
             console.log('✅ Telegram WebApp найден');
             
+            // Основной обработчик
             try {
                 app.onEvent('webapp_data', (event) => {
                     if (event?.data) {
@@ -726,6 +692,7 @@
                 console.warn('webapp_data не поддерживается');
             }
 
+            // Настройка внешнего вида
             try {
                 app.ready();
                 app.setBackgroundColor('#0F0F1F');
@@ -734,18 +701,12 @@
                 // Игнорируем
             }
         } else {
-            console.log('⚠️ Telegram WebApp не найден, работаем в демо-режиме');
+            console.log('⚠️ Telegram WebApp не найден');
         }
 
         // Показываем правила
         setTimeout(() => {
             showScreen('rules');
-            // Запрашиваем данные для демо
-            setTimeout(() => {
-                requestBalance();
-                requestMyNfts();
-                requestMarket();
-            }, 500);
         }, 300);
     }
 
@@ -758,7 +719,7 @@
         else if (month >= 8 && month <= 10) defaultSeason = 'autumn';
         else defaultSeason = 'winter';
 
-        // Generate elements
+        // Генерируем элементы
         const leafContainer = $('fallingLeaves');
         if (leafContainer) {
             for (let i = 0; i < 20; i++) {
