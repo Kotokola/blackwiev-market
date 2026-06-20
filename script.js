@@ -2,7 +2,7 @@
     'use strict';
 
     // ===== VERSION =====
-    const APP_VERSION = '2.0.5';
+    const APP_VERSION = '2.0.6';
     console.log('🚀 NFT Market v' + APP_VERSION);
 
     // ===== CONSTANTS =====
@@ -104,7 +104,6 @@
             STARS: Number(bal.STARS ?? bal.stars ?? bal.stars_balance ?? 0)
         };
 
-        // Обновляем баланс в хедере
         ['balUsdt', 'balTon', 'balStars'].forEach(id => {
             const el = $(id);
             if (!el) return;
@@ -112,7 +111,6 @@
             el.textContent = (state.balances[key] || 0).toFixed(2);
         });
 
-        // Обновляем баланс в выводе
         ['withdrawBalUsdt', 'withdrawBalTon', 'withdrawBalStars'].forEach(id => {
             const el = $(id);
             if (!el) return;
@@ -128,6 +126,25 @@
 
         if (!cb || !btn) return;
 
+        // Проверяем, принимал ли пользователь правила ранее
+        const rulesAccepted = localStorage.getItem('nft_rules_accepted');
+        if (rulesAccepted === 'true') {
+            console.log('✅ Правила уже были приняты ранее');
+            state.isRulesAccepted = true;
+            cb.checked = true;
+            btn.disabled = false;
+            setStatus('rulesStatus', '✅ Правила уже приняты', 'success');
+            
+            // Автоматически переходим в главное меню
+            setTimeout(() => {
+                showScreen('main');
+                requestBalance();
+                requestMyNfts();
+                requestMarket();
+            }, 500);
+            return;
+        }
+
         cb.addEventListener('change', () => {
             btn.disabled = !cb.checked;
             setStatus('rulesStatus', '', '');
@@ -139,12 +156,42 @@
                 return;
             }
 
-            setStatus('rulesStatus', '⏳ Обработка...', 'info');
-            const success = sendToBackend({ action: ACTIONS.ACCEPT_RULES });
+            setStatus('rulesStatus', '⏳ Отправка...', 'info');
+            
+            // Отправляем запрос в бот
+            const success = sendToBackend({ 
+                action: ACTIONS.ACCEPT_RULES,
+                timestamp: Date.now()
+            });
+            
             if (!success) {
-                setStatus('rulesStatus', '⚠️ Ожидание ответа от бота...', 'info');
+                // Если бот не отвечает, всё равно принимаем правила локально
+                acceptRulesLocally();
+            } else {
+                // Ждём ответ от бота 3 секунды, если нет - принимаем локально
+                setTimeout(() => {
+                    if (!state.isRulesAccepted) {
+                        console.log('⚠️ Бот не ответил, принимаем правила локально');
+                        acceptRulesLocally();
+                    }
+                }, 3000);
             }
         });
+    }
+
+    function acceptRulesLocally() {
+        if (state.isRulesAccepted) return;
+        
+        state.isRulesAccepted = true;
+        localStorage.setItem('nft_rules_accepted', 'true');
+        setStatus('rulesStatus', '✅ Правила приняты!', 'success');
+        
+        setTimeout(() => {
+            showScreen('main');
+            requestBalance();
+            requestMyNfts();
+            requestMarket();
+        }, 500);
     }
 
     // ===== MAIN MENU =====
@@ -208,7 +255,8 @@
                     action: ACTIONS.LIST_NFT,
                     nft_id: state.selectedNftForSell.id,
                     price: price,
-                    currency: currency
+                    currency: currency,
+                    timestamp: Date.now()
                 });
             });
         }
@@ -290,7 +338,8 @@
                     action: ACTIONS.CREATE_PURCHASE_REQUEST,
                     nft_id: state.selectedNftForBuy.id,
                     offer_price: state.selectedNftForBuy.price,
-                    currency: state.selectedNftForBuy.currency || 'USDT'
+                    currency: state.selectedNftForBuy.currency || 'USDT',
+                    timestamp: Date.now()
                 });
             });
         }
@@ -459,7 +508,8 @@
                     action: ACTIONS.CREATE_WITHDRAW_REQUEST,
                     currency: currency,
                     amount: amount,
-                    wallet_address: wallet.trim()
+                    wallet_address: wallet.trim(),
+                    timestamp: Date.now()
                 });
             });
         }
@@ -467,19 +517,19 @@
 
     // ===== REQUESTS =====
     function requestBalance() {
-        sendToBackend({ action: ACTIONS.GET_BALANCE });
+        sendToBackend({ action: ACTIONS.GET_BALANCE, timestamp: Date.now() });
     }
 
     function requestMyNfts() {
-        sendToBackend({ action: ACTIONS.GET_MY_NFTS });
+        sendToBackend({ action: ACTIONS.GET_MY_NFTS, timestamp: Date.now() });
     }
 
     function requestMarket() {
-        sendToBackend({ action: ACTIONS.GET_MARKET });
+        sendToBackend({ action: ACTIONS.GET_MARKET, timestamp: Date.now() });
     }
 
     function requestTransactions() {
-        sendToBackend({ action: ACTIONS.GET_MY_TX });
+        sendToBackend({ action: ACTIONS.GET_MY_TX, timestamp: Date.now() });
     }
 
     // ===== RENDER HELPERS =====
@@ -589,8 +639,11 @@
         const payload = data.result || data.data || data;
         const action = data.action || data.type || payload?.action || payload?.type;
 
+        // Обработка принятия правил
         if (action === 'accept_nft_rules' || action === ACTIONS.ACCEPT_RULES) {
             state.isRulesAccepted = true;
+            localStorage.setItem('nft_rules_accepted', 'true');
+            
             if (data.success !== false) {
                 setStatus('rulesStatus', '✅ Правила приняты!', 'success');
                 setTimeout(() => {
@@ -681,6 +734,7 @@
             
             try {
                 app.onEvent('webapp_data', (event) => {
+                    console.log('📨 webapp_data event:', event);
                     if (event?.data) {
                         try {
                             const parsed = JSON.parse(event.data);
@@ -692,6 +746,22 @@
                 });
             } catch (e) {
                 console.warn('webapp_data не поддерживается');
+            }
+
+            try {
+                app.onEvent('message', (event) => {
+                    console.log('📨 message event:', event);
+                    if (event?.data) {
+                        try {
+                            const parsed = JSON.parse(event.data);
+                            handleBackendMessage(parsed);
+                        } catch (e) {
+                            console.warn('Ошибка парсинга:', e);
+                        }
+                    }
+                });
+            } catch (e) {
+                console.warn('message не поддерживается');
             }
 
             try {
@@ -713,8 +783,19 @@
             state.isTelegram = false;
         }
 
+        // Показываем нужный экран
         setTimeout(() => {
-            showScreen('rules');
+            const rulesAccepted = localStorage.getItem('nft_rules_accepted');
+            if (rulesAccepted === 'true') {
+                console.log('✅ Правила уже приняты, сразу в главное меню');
+                state.isRulesAccepted = true;
+                showScreen('main');
+                requestBalance();
+                requestMyNfts();
+                requestMarket();
+            } else {
+                showScreen('rules');
+            }
         }, 300);
     }
 
@@ -727,7 +808,7 @@
         else if (month >= 8 && month <= 10) defaultSeason = 'autumn';
         else defaultSeason = 'winter';
 
-        // Генерируем листья
+        // Генерируем элементы
         const leafContainer = $('fallingLeaves');
         if (leafContainer) {
             for (let i = 0; i < 20; i++) {
@@ -740,7 +821,6 @@
             }
         }
 
-        // Генерируем снежинки
         const snowContainer = $('snowflakes');
         if (snowContainer) {
             for (let i = 0; i < 40; i++) {
@@ -753,7 +833,6 @@
             }
         }
 
-        // Генерируем цветы
         const flowerContainer = $('fallingFlowers');
         if (flowerContainer) {
             for (let i = 0; i < 15; i++) {
@@ -766,10 +845,8 @@
             }
         }
 
-        // Устанавливаем сезон
         setSeason(defaultSeason);
 
-        // Кнопки смены сезона
         $$('.season-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 setSeason(btn.dataset.season);
@@ -786,27 +863,20 @@
             spring: 'fallingFlowers'
         };
 
-        // Удаляем старые классы
         body.className = body.className
             .split(' ')
             .filter(c => !c.startsWith('season-'))
             .join(' ');
         body.classList.add('season-' + season);
 
-        // Обновляем кнопки
         $$('.season-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.season === season);
         });
 
-        // Активируем эффекты
         Object.keys(effects).forEach(key => {
             const el = $(effects[key]);
             if (el) {
-                if (key === season) {
-                    el.classList.add('active');
-                } else {
-                    el.classList.remove('active');
-                }
+                el.classList.toggle('active', key === season);
             }
         });
     }
