@@ -1617,3 +1617,36 @@ body {
         grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     }
 }
+/* ===== FIX: Солнечные лучи по умолчанию ===== */
+body.season-summer .sun-rays {
+    opacity: 0.5;
+}
+
+body.season-autumn .falling-leaves {
+    opacity: 1;
+}
+
+body.season-winter .snowflakes {
+    opacity: 1;
+}
+
+body.season-spring .falling-flowers {
+    opacity: 1;
+}
+
+/* ===== FIX: Анимации для всех сезонов ===== */
+body.season-summer .sun-rays .ray {
+    animation: rotateRay 25s linear infinite;
+}
+
+body.season-autumn .leaf {
+    animation: fallLeaf linear infinite;
+}
+
+body.season-winter .snowflake {
+    animation: fallSnow linear infinite;
+}
+
+body.season-spring .flower {
+    animation: fallFlower linear infinite;
+}
