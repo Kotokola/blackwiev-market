@@ -292,6 +292,17 @@
                                     Заявка на вывод
                                 </h3>
 
+                                <div class="withdraw-info">
+                                    <div class="withdraw-balance">
+                                        <span>Доступно для вывода:</span>
+                                        <div class="withdraw-balance-items">
+                                            <span class="withdraw-bal-item">💎 <span id="withdrawBalUsdt">0.00</span> USDT</span>
+                                            <span class="withdraw-bal-item">🪙 <span id="withdrawBalTon">0.00</span> TON</span>
+                                            <span class="withdraw-bal-item">⭐ <span id="withdrawBalStars">0.00</span> STARS</span>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="form-group">
                                     <label class="form-label">Валюта</label>
                                     <div class="currency-select">
@@ -313,17 +324,22 @@
 
                                 <div class="form-group">
                                     <label class="form-label">Сумма</label>
-                                    <input type="number" min="0" step="0.01" id="withdrawAmountInput" placeholder="0.00">
+                                    <input type="number" min="0.01" step="0.01" id="withdrawAmountInput" placeholder="0.00">
                                 </div>
 
                                 <div class="form-group">
-                                    <label class="form-label">Кошелёк (адрес)</label>
-                                    <input type="text" id="withdrawWalletInput" placeholder="Введите адрес для вывода">
+                                    <label class="form-label">Кошелёк (адрес для вывода)</label>
+                                    <input type="text" id="withdrawWalletInput" placeholder="Введите адрес кошелька">
+                                </div>
+
+                                <div class="withdraw-note">
+                                    <i class="fa-solid fa-info-circle"></i>
+                                    <span>После создания заявки напишите админу @ggyyert для подтверждения</span>
                                 </div>
 
                                 <button class="btn-primary btn-large" id="btnCreateWithdraw">
                                     <i class="fa-solid fa-paper-plane"></i>
-                                    Создать заявку
+                                    Создать заявку на вывод
                                 </button>
 
                                 <div class="status" id="withdrawStatus"></div>
@@ -371,7 +387,7 @@
                     
                     <div class="modal-stats">
                         <div class="modal-stat">
-                            <span class="stat-label">Ссылка</span>
+                            <span class="stat-label">Ссылка на NFT</span>
                             <span class="stat-value" id="modalTokenLink">—</span>
                         </div>
                     </div>
@@ -380,6 +396,10 @@
                         <i class="fa-solid fa-cart-shopping"></i>
                         Купить
                     </button>
+                    <div class="modal-note">
+                        <i class="fa-solid fa-info-circle"></i>
+                        <span>После покупки напишите админу @ggyyert для завершения сделки</span>
+                    </div>
 
                     <div class="status" id="modalBuyStatus"></div>
                 </div>
