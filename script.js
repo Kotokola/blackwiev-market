@@ -2,7 +2,7 @@
     'use strict';
 
     // ===== VERSION =====
-    const APP_VERSION = '2.0.8';
+    const APP_VERSION = '2.0.9';
     console.log('🚀 NFT Market v' + APP_VERSION);
 
     // ===== CONSTANTS =====
@@ -48,11 +48,9 @@
 
     function sendToBackend(data) {
         const app = getTgApp();
-        
         if (app) {
             try {
-                const jsonData = JSON.stringify(data);
-                app.sendData(jsonData);
+                app.sendData(JSON.stringify(data));
                 return true;
             } catch (e) {
                 console.error('❌ Ошибка отправки:', e);
@@ -119,12 +117,10 @@
 
         if (!cb || !btn) return;
 
+        // Проверяем localStorage
         const rulesAccepted = localStorage.getItem('nft_rules_accepted');
         if (rulesAccepted === 'true') {
             state.isRulesAccepted = true;
-            cb.checked = true;
-            btn.disabled = false;
-            // Сразу переходим в главное меню без статусов
             showScreen('main');
             requestBalance();
             requestMyNfts();
@@ -142,21 +138,21 @@
                 return;
             }
 
-            // Сохраняем в localStorage
+            // Сохраняем и сразу переходим
             localStorage.setItem('nft_rules_accepted', 'true');
             state.isRulesAccepted = true;
             
-            // Отправляем в бот (в фоне)
+            // Отправляем в бот (в фоне, не ждём ответа)
             sendToBackend({ action: ACTIONS.ACCEPT_RULES });
             
-            // Сразу переходим в главное меню - без ожидания!
+            // Сразу переходим в главное меню - БЕЗ СТАТУСОВ
             showScreen('main');
             requestBalance();
             requestMyNfts();
             requestMarket();
             
-            // Просто показываем успех без задержек
-            setStatus('rulesStatus', '✅ Правила приняты!', 'success');
+            // Очищаем статус, чтобы не висел
+            setStatus('rulesStatus', '', '');
         });
     }
 
@@ -392,48 +388,15 @@
     // ===== PROFILE =====
     function initProfile() {
         const app = getTgApp();
-        
-        // Пробуем получить данные разными способами
         let user = {};
-        if (app) {
-            // Способ 1: через initDataUnsafe
-            if (app.initDataUnsafe && app.initDataUnsafe.user) {
-                user = app.initDataUnsafe.user;
-                console.log('👤 Данные из initDataUnsafe:', user);
-            }
-            // Способ 2: через WebApp.User
-            else if (app.User) {
-                user = app.User;
-                console.log('👤 Данные из WebApp.User:', user);
-            }
-        }
         
-        // Если данных нет, пробуем получить из URL
-        if (!user.id) {
-            try {
-                const urlParams = new URLSearchParams(window.location.search);
-                const userData = urlParams.get('user');
-                if (userData) {
-                    const parsed = JSON.parse(decodeURIComponent(userData));
-                    if (parsed && parsed.id) {
-                        user = parsed;
-                        console.log('👤 Данные из URL:', user);
-                    }
-                }
-            } catch (e) {
-                console.warn('Не удалось получить данные из URL');
-            }
+        if (app && app.initDataUnsafe && app.initDataUnsafe.user) {
+            user = app.initDataUnsafe.user;
         }
         
         state.userId = user.id || null;
         state.userName = user.first_name || user.last_name ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : null;
         state.userUsername = user.username ? '@' + user.username : null;
-        
-        console.log('👤 Итоговые данные пользователя:', {
-            id: state.userId,
-            name: state.userName,
-            username: state.userUsername
-        });
 
         const nameEl = $('profileName');
         const usernameEl = $('profileUsername');
@@ -661,28 +624,28 @@
 
             case ACTIONS.CREATE_PURCHASE_REQUEST:
                 if (payload?.success !== false) {
-                    setStatus('modalBuyStatus', '✅ Заявка на покупку отправлена! Напишите админу @ggyyert', 'success');
+                    setStatus('modalBuyStatus', '✅ Заявка на покупку отправлена!', 'success');
                     setTimeout(() => {
                         closeModal();
                         requestMarket();
-                    }, 2000);
+                    }, 1500);
                 } else {
-                    setStatus('modalBuyStatus', '❌ ' + (payload?.error || 'Ошибка создания заявки'), 'danger');
+                    setStatus('modalBuyStatus', '❌ ' + (payload?.error || 'Ошибка'), 'danger');
                 }
                 break;
 
             case ACTIONS.CREATE_WITHDRAW_REQUEST:
                 if (payload?.success !== false) {
-                    setStatus('withdrawStatus', '✅ Заявка на вывод создана! Напишите админу @ggyyert', 'success');
+                    setStatus('withdrawStatus', '✅ Заявка на вывод создана!', 'success');
                     setTimeout(() => {
                         requestBalance();
                         const amountInput = $('withdrawAmountInput');
                         const walletInput = $('withdrawWalletInput');
                         if (amountInput) amountInput.value = '';
                         if (walletInput) walletInput.value = '';
-                    }, 2000);
+                    }, 1500);
                 } else {
-                    setStatus('withdrawStatus', '❌ ' + (payload?.error || 'Ошибка создания заявки'), 'danger');
+                    setStatus('withdrawStatus', '❌ ' + (payload?.error || 'Ошибка'), 'danger');
                 }
                 break;
 
@@ -695,7 +658,7 @@
                         requestMarket();
                     }, 1500);
                 } else {
-                    setStatus('sellStatus', '❌ ' + (payload?.error || 'Ошибка выставления NFT'), 'danger');
+                    setStatus('sellStatus', '❌ ' + (payload?.error || 'Ошибка'), 'danger');
                 }
                 break;
 
@@ -736,17 +699,13 @@
                 app.setHeaderColor('#0F0F1F');
                 app.expand();
             } catch (e) {}
-
-            // Логируем все данные для отладки
-            console.log('📱 initDataUnsafe:', app.initDataUnsafe);
-            console.log('📱 WebApp:', app);
             
         } else {
             console.log('⚠️ Telegram WebApp не найден');
             state.isTelegram = false;
         }
 
-        // Показываем нужный экран
+        // Проверяем правила
         setTimeout(() => {
             const rulesAccepted = localStorage.getItem('nft_rules_accepted');
             if (rulesAccepted === 'true') {
@@ -845,7 +804,6 @@
     // ===== INIT =====
     document.addEventListener('DOMContentLoaded', function() {
         console.log('🚀 NFT Market v' + APP_VERSION + ' запущен');
-        console.log('📱 User Agent:', navigator.userAgent);
 
         initWebApp();
         initRules();
