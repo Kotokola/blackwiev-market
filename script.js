@@ -2,7 +2,7 @@
     'use strict';
 
     // ===== VERSION =====
-    const APP_VERSION = '2.0.9';
+    const APP_VERSION = '2.1.0';
     console.log('🚀 NFT Market v' + APP_VERSION);
 
     // ===== CONSTANTS =====
@@ -26,6 +26,7 @@
         userId: null,
         userName: null,
         userUsername: null,
+        userAvatar: null,
         balances: { USDT: 0, TON: 0, STARS: 0 },
         selectedNftForSell: null,
         selectedNftForBuy: null,
@@ -58,6 +59,65 @@
             }
         }
         return false;
+    }
+
+    // ===== ПОЛУЧЕНИЕ ДАННЫХ ПОЛЬЗОВАТЕЛЯ =====
+    function getUserData() {
+        const app = getTgApp();
+        let user = {};
+        
+        console.log('🔍 Попытка получить данные пользователя...');
+        
+        // Способ 1: Через initDataUnsafe (основной способ)
+        if (app && app.initDataUnsafe && app.initDataUnsafe.user) {
+            user = app.initDataUnsafe.user;
+            console.log('✅ Данные из initDataUnsafe:', user);
+            return user;
+        }
+        
+        // Способ 2: Через WebApp.User (альтернативный)
+        if (app && app.User) {
+            user = app.User;
+            console.log('✅ Данные из WebApp.User:', user);
+            return user;
+        }
+        
+        // Способ 3: Через параметры URL (для тестирования)
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const userData = urlParams.get('user');
+            if (userData) {
+                const parsed = JSON.parse(decodeURIComponent(userData));
+                if (parsed && parsed.id) {
+                    user = parsed;
+                    console.log('✅ Данные из URL:', user);
+                    return user;
+                }
+            }
+        } catch (e) {
+            console.warn('Не удалось получить данные из URL');
+        }
+        
+        // Способ 4: Через WebApp.initData (парсим строку)
+        if (app && app.initData) {
+            try {
+                const params = new URLSearchParams(app.initData);
+                const userStr = params.get('user');
+                if (userStr) {
+                    const parsed = JSON.parse(decodeURIComponent(userStr));
+                    if (parsed && parsed.id) {
+                        user = parsed;
+                        console.log('✅ Данные из initData:', user);
+                        return user;
+                    }
+                }
+            } catch (e) {
+                console.warn('Не удалось распарсить initData');
+            }
+        }
+        
+        console.log('⚠️ Не удалось получить данные пользователя');
+        return null;
     }
 
     // ===== SCREEN MANAGEMENT =====
@@ -117,7 +177,6 @@
 
         if (!cb || !btn) return;
 
-        // Проверяем localStorage
         const rulesAccepted = localStorage.getItem('nft_rules_accepted');
         if (rulesAccepted === 'true') {
             state.isRulesAccepted = true;
@@ -138,20 +197,16 @@
                 return;
             }
 
-            // Сохраняем и сразу переходим
             localStorage.setItem('nft_rules_accepted', 'true');
             state.isRulesAccepted = true;
             
-            // Отправляем в бот (в фоне, не ждём ответа)
             sendToBackend({ action: ACTIONS.ACCEPT_RULES });
             
-            // Сразу переходим в главное меню - БЕЗ СТАТУСОВ
             showScreen('main');
             requestBalance();
             requestMyNfts();
             requestMarket();
             
-            // Очищаем статус, чтобы не висел
             setStatus('rulesStatus', '', '');
         });
     }
@@ -387,34 +442,65 @@
 
     // ===== PROFILE =====
     function initProfile() {
-        const app = getTgApp();
-        let user = {};
+        console.log('👤 Инициализация профиля...');
         
-        if (app && app.initDataUnsafe && app.initDataUnsafe.user) {
-            user = app.initDataUnsafe.user;
+        // Получаем данные пользователя
+        const user = getUserData();
+        
+        if (user && user.id) {
+            state.userId = user.id;
+            state.userName = user.first_name || user.last_name ? 
+                `${user.first_name || ''} ${user.last_name || ''}`.trim() : 
+                user.username || 'Пользователь';
+            state.userUsername = user.username ? '@' + user.username : null;
+            
+            console.log('👤 Данные пользователя загружены:', {
+                id: state.userId,
+                name: state.userName,
+                username: state.userUsername
+            });
+        } else {
+            console.warn('⚠️ Данные пользователя не найдены');
+            state.userName = 'Гость';
+            state.userUsername = null;
         }
-        
-        state.userId = user.id || null;
-        state.userName = user.first_name || user.last_name ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : null;
-        state.userUsername = user.username ? '@' + user.username : null;
 
+        // Обновляем элементы профиля
         const nameEl = $('profileName');
         const usernameEl = $('profileUsername');
         const idEl = $('profileId');
+        const avatarEl = $('profileAvatar');
 
-        if (nameEl) nameEl.textContent = state.userName || '—';
-        if (usernameEl) usernameEl.textContent = state.userUsername || '—';
-        if (idEl) idEl.textContent = state.isIdVisible ? (state.userId || '—') : '••••••••';
+        if (nameEl) {
+            nameEl.textContent = state.userName || '—';
+        }
+        if (usernameEl) {
+            usernameEl.textContent = state.userUsername || '—';
+        }
+        if (idEl) {
+            idEl.textContent = state.isIdVisible ? (state.userId || '—') : '••••••••';
+        }
+        if (avatarEl && state.userName) {
+            // Если есть имя, показываем первую букву
+            const initial = state.userName.charAt(0).toUpperCase();
+            avatarEl.innerHTML = `<span style="font-size:28px;font-weight:700;">${initial}</span>`;
+        }
 
+        // Toggle ID
         const toggleBtn = $('btnToggleId');
         if (toggleBtn) {
             toggleBtn.addEventListener('click', () => {
                 state.isIdVisible = !state.isIdVisible;
-                if (idEl) idEl.textContent = state.isIdVisible ? (state.userId || '—') : '••••••••';
-                toggleBtn.innerHTML = state.isIdVisible ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+                if (idEl) {
+                    idEl.textContent = state.isIdVisible ? (state.userId || '—') : '••••••••';
+                }
+                toggleBtn.innerHTML = state.isIdVisible ? 
+                    '<i class="fa-solid fa-eye-slash"></i>' : 
+                    '<i class="fa-solid fa-eye"></i>';
             });
         }
 
+        // Tabs
         const tabs = $$('[data-profile-tab]');
         const panes = $$('.tab-pane[data-tab]');
 
@@ -700,6 +786,10 @@
                 app.expand();
             } catch (e) {}
             
+            // Логируем всю информацию для отладки
+            console.log('📱 WebApp.initDataUnsafe:', app.initDataUnsafe);
+            console.log('📱 WebApp.initData:', app.initData);
+            
         } else {
             console.log('⚠️ Telegram WebApp не найден');
             state.isTelegram = false;
@@ -714,6 +804,8 @@
                 requestBalance();
                 requestMyNfts();
                 requestMarket();
+                // Загружаем профиль для отображения данных
+                setTimeout(initProfile, 500);
             } else {
                 showScreen('rules');
             }
