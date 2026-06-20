@@ -2,7 +2,7 @@
     'use strict';
 
     // ===== VERSION =====
-    const APP_VERSION = '2.0.3';
+    const APP_VERSION = '2.0.5';
     console.log('🚀 NFT Market v' + APP_VERSION);
 
     // ===== CONSTANTS =====
@@ -49,12 +49,13 @@
     function sendToBackend(data) {
         const app = getTgApp();
         
-        console.log('📤 Отправка:', data);
+        console.log('📤 Отправка в бот:', data);
         
         if (app) {
             try {
                 const jsonData = JSON.stringify(data);
                 app.sendData(jsonData);
+                console.log('✅ Данные отправлены');
                 return true;
             } catch (e) {
                 console.error('❌ Ошибка отправки:', e);
@@ -62,7 +63,6 @@
             }
         } else {
             console.warn('⚠️ Telegram WebApp не найден');
-            // Только логируем, без демо-данных
             return false;
         }
     }
@@ -381,41 +381,27 @@
         const app = getTgApp();
         const user = app?.initDataUnsafe?.user || {};
         
-        // Получаем данные пользователя из Telegram
         state.userId = user.id || null;
         state.userName = user.first_name || user.last_name ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : null;
         state.userUsername = user.username ? '@' + user.username : null;
 
-        // Если нет данных из Telegram, показываем заглушку
         const nameEl = $('profileName');
         const usernameEl = $('profileUsername');
         const idEl = $('profileId');
 
-        if (nameEl) {
-            nameEl.textContent = state.userName || '—';
-        }
-        if (usernameEl) {
-            usernameEl.textContent = state.userUsername || '—';
-        }
-        if (idEl) {
-            idEl.textContent = state.isIdVisible ? (state.userId || '—') : '••••••••';
-        }
+        if (nameEl) nameEl.textContent = state.userName || '—';
+        if (usernameEl) usernameEl.textContent = state.userUsername || '—';
+        if (idEl) idEl.textContent = state.isIdVisible ? (state.userId || '—') : '••••••••';
 
-        // Toggle ID
         const toggleBtn = $('btnToggleId');
         if (toggleBtn) {
             toggleBtn.addEventListener('click', () => {
                 state.isIdVisible = !state.isIdVisible;
-                if (idEl) {
-                    idEl.textContent = state.isIdVisible ? (state.userId || '—') : '••••••••';
-                }
-                toggleBtn.innerHTML = state.isIdVisible ? 
-                    '<i class="fa-solid fa-eye-slash"></i>' : 
-                    '<i class="fa-solid fa-eye"></i>';
+                if (idEl) idEl.textContent = state.isIdVisible ? (state.userId || '—') : '••••••••';
+                toggleBtn.innerHTML = state.isIdVisible ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
             });
         }
 
-        // Tabs
         const tabs = $$('[data-profile-tab]');
         const panes = $$('.tab-pane[data-tab]');
 
@@ -424,9 +410,7 @@
                 tabs.forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
                 const name = tab.dataset.profileTab;
-                panes.forEach(p => {
-                    p.classList.toggle('hidden', p.dataset.tab !== name);
-                });
+                panes.forEach(p => p.classList.toggle('hidden', p.dataset.tab !== name));
                 if (name === 'inventory') requestMyNfts();
                 else if (name === 'tx') requestTransactions();
             });
@@ -605,7 +589,6 @@
         const payload = data.result || data.data || data;
         const action = data.action || data.type || payload?.action || payload?.type;
 
-        // Обработка принятия правил
         if (action === 'accept_nft_rules' || action === ACTIONS.ACCEPT_RULES) {
             state.isRulesAccepted = true;
             if (data.success !== false) {
@@ -694,8 +677,8 @@
         
         if (app) {
             console.log('✅ Telegram WebApp найден');
+            state.isTelegram = true;
             
-            // Основной обработчик
             try {
                 app.onEvent('webapp_data', (event) => {
                     if (event?.data) {
@@ -711,17 +694,13 @@
                 console.warn('webapp_data не поддерживается');
             }
 
-            // Настройка внешнего вида
             try {
                 app.ready();
                 app.setBackgroundColor('#0F0F1F');
                 app.setHeaderColor('#0F0F1F');
                 app.expand();
-            } catch (e) {
-                // Игнорируем
-            }
+            } catch (e) {}
 
-            // Получаем данные пользователя
             const user = app.initDataUnsafe?.user || {};
             if (user.id) {
                 state.userId = user.id;
@@ -731,9 +710,9 @@
             }
         } else {
             console.log('⚠️ Telegram WebApp не найден');
+            state.isTelegram = false;
         }
 
-        // Показываем правила
         setTimeout(() => {
             showScreen('rules');
         }, 300);
@@ -748,7 +727,7 @@
         else if (month >= 8 && month <= 10) defaultSeason = 'autumn';
         else defaultSeason = 'winter';
 
-        // Генерируем элементы
+        // Генерируем листья
         const leafContainer = $('fallingLeaves');
         if (leafContainer) {
             for (let i = 0; i < 20; i++) {
@@ -761,6 +740,7 @@
             }
         }
 
+        // Генерируем снежинки
         const snowContainer = $('snowflakes');
         if (snowContainer) {
             for (let i = 0; i < 40; i++) {
@@ -773,6 +753,7 @@
             }
         }
 
+        // Генерируем цветы
         const flowerContainer = $('fallingFlowers');
         if (flowerContainer) {
             for (let i = 0; i < 15; i++) {
@@ -785,8 +766,10 @@
             }
         }
 
+        // Устанавливаем сезон
         setSeason(defaultSeason);
 
+        // Кнопки смены сезона
         $$('.season-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 setSeason(btn.dataset.season);
@@ -803,19 +786,28 @@
             spring: 'fallingFlowers'
         };
 
+        // Удаляем старые классы
         body.className = body.className
             .split(' ')
             .filter(c => !c.startsWith('season-'))
             .join(' ');
         body.classList.add('season-' + season);
 
+        // Обновляем кнопки
         $$('.season-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.season === season);
         });
 
-        Object.values(effects).forEach(id => {
-            const el = $(id);
-            if (el) el.classList.toggle('active', id === effects[season]);
+        // Активируем эффекты
+        Object.keys(effects).forEach(key => {
+            const el = $(effects[key]);
+            if (el) {
+                if (key === season) {
+                    el.classList.add('active');
+                } else {
+                    el.classList.remove('active');
+                }
+            }
         });
     }
 
