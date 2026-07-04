@@ -14,7 +14,7 @@
 <canvas id="bgCanvas"></canvas>
 
 <header class="hdr">
-    <div class="hdr-inner">
+    <div class="hdr-in">
         <div class="hdr-logo"><i class="fa-solid fa-gem"></i> NFT Market</div>
         <div class="hdr-bal">USDT <span id="balUsdt">0.00</span></div>
     </div>
@@ -23,20 +23,16 @@
 <main class="app">
 
     <!-- ===== ПРАВИЛА ===== -->
-    <section class="scr active" id="scrRules">
+    <section class="scr act" id="scrRules">
         <div class="box">
-            <div class="box-icon"><i class="fa-solid fa-scroll"></i></div>
-            <h2>NFT Market</h2>
+            <div class="ico"><i class="fa-solid fa-scroll"></i></div>
+            <h2>BLACKWIEV NFT Market</h2>
             <p class="dim">Примите правила для доступа к маркету</p>
-            <a class="link" href="https://telegra.ph/PRAVILA-MAGAZINA-BLACKWIEV-NFT-MARKET-05-29" target="_blank">
-                <i class="fa-solid fa-arrow-up-right-from-square"></i> Правила
+            <a class="lnk" href="https://telegra.ph/PRAVILA-MAGAZINA-BLACKWIEV-NFT-MARKET-05-29" target="_blank">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Правила маркета
             </a>
-            <label class="chk">
-                <input type="checkbox" id="cbRules">
-                <span>Я принимаю условия</span>
-            </label>
-            <button class="btn" id="btnRules" disabled>Принять и войти</button>
-            <div class="msg" id="msgRules"></div>
+            <label class="chk"><input type="checkbox" id="cbR"><span>Я принимаю условия</span></label>
+            <button class="btn" id="btnR" disabled>Принять и войти</button>
         </div>
     </section>
 
@@ -45,10 +41,10 @@
         <div class="box">
             <h2>Главное меню</h2>
             <p class="dim">Выберите действие</p>
-            <div class="menu3">
-                <button class="mbtn" data-go="sell"><i class="fa-solid fa-hand-holding-dollar"></i>Продать</button>
-                <button class="mbtn" data-go="buy"><i class="fa-solid fa-bag-shopping"></i>Купить</button>
-                <button class="mbtn" data-go="profile"><i class="fa-solid fa-user"></i>Профиль</button>
+            <div class="m3">
+                <button class="mbtn" data-go="sell"><i class="fa-solid fa-hand-holding-dollar"></i><span>Продать</span></button>
+                <button class="mbtn" data-go="buy"><i class="fa-solid fa-bag-shopping"></i><span>Купить</span></button>
+                <button class="mbtn" data-go="profile"><i class="fa-solid fa-user"></i><span>Профиль</span></button>
             </div>
         </div>
     </section>
@@ -56,85 +52,93 @@
     <!-- ===== ПРОДАТЬ ===== -->
     <section class="scr" id="scrSell">
         <div class="box">
-            <div class="head"><h2>Продать NFT</h2><button class="back" data-back="menu"><i class="fa-solid fa-arrow-left"></i></button></div>
-            <div class="col2">
+            <div class="hd"><h2>Продать NFT</h2><button class="bk" data-back="menu"><i class="fa-solid fa-arrow-left"></i></button></div>
+            <div class="c2">
                 <div>
-                    <h3 class="stitle">Инвентарь</h3>
-                    <div id="sellList" class="vlist"></div>
-                    <div class="empty" id="sellEmpty"><i class="fa-solid fa-box-open"></i>Пусто</div>
+                    <h3 class="st">Инвентарь</h3>
+                    <div id="sellL" class="vl"></div>
+                    <div class="emp" id="sellE"><i class="fa-solid fa-box-open"></i>Пусто</div>
                 </div>
                 <div>
-                    <h3 class="stitle">Продажа</h3>
-                    <div class="field"><label>NFT</label><div class="sel-nft" id="sellSel">Не выбран</div></div>
-                    <div class="field"><label>Цена (USDT)</label><input type="number" min="0.1" step="0.01" id="sellPrice" placeholder="10"></div>
+                    <h3 class="st">Продажа</h3>
+                    <div class="fld"><label>NFT</label><div class="sn" id="sellS">Не выбран</div></div>
+                    <div class="fld"><label>Цена (USDT)</label><input type="number" min="0.1" step="0.01" id="sellP" placeholder="10"></div>
                     <button class="btn" id="btnSell" disabled>Выставить</button>
-                    <div class="msg" id="msgSell"></div>
+                    <div class="ms" id="msgSell"></div>
                 </div>
             </div>
+            <div class="mgr"><i class="fa-solid fa-headset"></i> Пополнение инвентаря и вывод средств через <b>@ggyyert</b></div>
         </div>
     </section>
 
     <!-- ===== КУПИТЬ ===== -->
     <section class="scr" id="scrBuy">
         <div class="box">
-            <div class="head"><h2>Магазин</h2><button class="back" data-back="menu"><i class="fa-solid fa-arrow-left"></i></button></div>
-            <div id="marketList" class="vlist"></div>
-            <div class="empty" id="marketEmpty"><i class="fa-solid fa-store"></i>Пока пусто</div>
+            <div class="hd"><h2>Магазин</h2><button class="bk" data-back="menu"><i class="fa-solid fa-arrow-left"></i></button></div>
+            <div id="mktL" class="vl"></div>
+            <div class="emp" id="mktE"><i class="fa-solid fa-store"></i>Пока пусто</div>
+            <div class="mgr"><i class="fa-solid fa-headset"></i> Пополнение инвентаря и вывод средств через <b>@ggyyert</b></div>
         </div>
     </section>
 
     <!-- ===== ПРОФИЛЬ ===== -->
     <section class="scr" id="scrProfile">
         <div class="box">
-            <div class="head"><h2>Профиль</h2><button class="back" data-back="menu"><i class="fa-solid fa-arrow-left"></i></button></div>
-            <div class="prof-top">
-                <div class="avatar" id="av"><i class="fa-solid fa-user"></i></div>
-                <div class="prof-info">
-                    <div class="prof-name" id="pName">Загрузка...</div>
-                    <div class="prof-sub"><span id="pUser">—</span> · ID <span id="pId">—</span></div>
+            <div class="hd"><h2>Профиль</h2><button class="bk" data-back="menu"><i class="fa-solid fa-arrow-left"></i></button></div>
+            <div class="ptop">
+                <div class="av" id="av"></div>
+                <div class="pinfo">
+                    <div class="pn" id="pNm">Загрузка...</div>
+                    <div class="ps" id="pUs">—</div>
                 </div>
             </div>
+            <div class="idrow">
+                <span class="idlbl">ID: <span class="idval" id="pId">—</span></span>
+                <button class="btntiny" id="btnToggleId">Показать</button>
+            </div>
             <div class="tabs">
-                <button class="tab active" data-tab="inv">Инвентарь</button>
+                <button class="tab act" data-tab="inv">Инвентарь</button>
                 <button class="tab" data-tab="wd">Вывод</button>
                 <button class="tab" data-tab="tx">История</button>
             </div>
-            <div class="tabcont active" data-tab="inv">
-                <div id="profInv" class="vlist"></div>
-                <div class="empty" id="profInvE"><i class="fa-solid fa-box-open"></i>Пусто</div>
+            <div class="tc act" data-tab="inv">
+                <div id="prInv" class="vl"></div>
+                <div class="emp" id="prInvE"><i class="fa-solid fa-box-open"></i>Пусто</div>
             </div>
-            <div class="tabcont" data-tab="wd">
-                <h3 class="stitle">Вывод средств</h3>
-                <div class="field"><label>Сумма (USDT)</label><input type="number" min="1" id="wdAmt" placeholder="Минимум 1"></div>
-                <div class="field"><label>Кошелёк</label><input type="text" id="wdWallet" placeholder="Адрес"></div>
+            <div class="tc" data-tab="wd">
+                <h3 class="st">Вывод средств</h3>
+                <div class="fld"><label>Сумма (USDT)</label><input type="number" min="1" id="wdA" placeholder="Минимум 1"></div>
+                <div class="fld"><label>Кошелёк</label><input type="text" id="wdW" placeholder="Адрес"></div>
                 <button class="btn" id="btnWd">Создать заявку</button>
-                <div class="msg" id="msgWd"></div>
+                <div class="ms" id="msgWd"></div>
             </div>
-            <div class="tabcont" data-tab="tx">
-                <h3 class="stitle">История</h3>
-                <div id="txList" class="vlist"></div>
-                <div class="empty" id="txE"><i class="fa-solid fa-clock-rotate-left"></i>Пусто</div>
+            <div class="tc" data-tab="tx">
+                <h3 class="st">История</h3>
+                <div id="txL" class="vl"></div>
+                <div class="emp" id="txE"><i class="fa-solid fa-clock-rotate-left"></i>Пусто</div>
             </div>
+            <div class="mgr"><i class="fa-solid fa-headset"></i> Пополнение инвентаря и вывод средств через <b>@ggyyert</b></div>
         </div>
     </section>
 
 </main>
 
 <!-- Модалка NFT -->
-<div class="overlay" id="overlay">
+<div class="ov" id="ov">
     <div class="modal">
-        <button class="mclose" id="mClose"><i class="fa-solid fa-xmark"></i></button>
-        <img class="mimg" id="mImg" src="" alt="">
-        <div class="mbadge" id="mRarity">—</div>
-        <h2 id="mTitle">—</h2>
-        <div class="mprice" id="mPrice">—</div>
-        <div class="mseller" id="mSeller">—</div>
-        <div class="mdetails">
-            <div><span>Ссылка</span><span id="mLink">—</span></div>
-            <div><span>Редкость</span><span id="mRarText">—</span></div>
+        <button class="mc" id="mCl"><i class="fa-solid fa-xmark"></i></button>
+        <img class="mi" id="mI" src="" alt="">
+        <div class="mbg" id="mR">—</div>
+        <h2 id="mT">—</h2>
+        <div class="mpr" id="mP">—</div>
+        <div class="msl" id="mS">—</div>
+        <div class="mdt">
+            <div><span>Ссылка</span><span id="mLk">—</span></div>
+            <div><span>Редкость</span><span id="mRT">—</span></div>
         </div>
-        <button class="btn btn-buy" id="btnBuy" disabled>Купить через заявку</button>
-        <div class="msg" id="msgBuy"></div>
+        <button class="btn btnb" id="btnBuy" disabled>Купить через заявку</button>
+        <div class="ms" id="msgBuy"></div>
+        <div class="mgr"><i class="fa-solid fa-headset"></i> Вопросы? Пишите <b>@ggyyert</b></div>
     </div>
 </div>
 
