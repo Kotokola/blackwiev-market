@@ -34,11 +34,11 @@
 
   function tgSend(actionOrPayload) {
     const app = tgApp();
-    if (!app) throw new Error('Telegram WebApp API not found');
+    if (!app) return; // Silently ignore if not in Telegram
     const data = typeof actionOrPayload === 'string'
       ? JSON.stringify({ action: actionOrPayload })
       : JSON.stringify(actionOrPayload);
-    app.sendData(data);
+    try { app.sendData(data); } catch {}
   }
 
   function setText(id, text) {
@@ -79,7 +79,13 @@
 
   function renderProfileFromTelegram() {
     const tgUser = getTelegramUser();
-    if (!tgUser) return;
+    if (!tgUser) {
+      // Not in Telegram or user data unavailable — show placeholder
+      setText('profileName', 'Пользователь');
+      setText('profileUsername', '—');
+      setText('profileId', '—');
+      return;
+    }
 
     currentUser = tgUser;
 
@@ -113,14 +119,21 @@
     });
 
     btn.addEventListener('click', () => {
+      // Accept locally — bot will know when user sends first request
       try {
-        tgSend({ action: ACTION.ACCEPT_RULES });
-        // Immediately go to main menu
-        setScreen('main');
-      } catch (e) {
-        setStatus('rulesStatus', 'Запусти mini app внутри Telegram.', 'danger');
-      }
+        localStorage.setItem('bb_rules_accepted', '1');
+      } catch {}
+      setScreen('main');
+      // Try to notify bot (works only via inline button, ignore failure)
+      try { tgSend({ action: ACTION.ACCEPT_RULES }); } catch {}
     });
+
+    // Auto-skip rules if already accepted
+    try {
+      if (localStorage.getItem('bb_rules_accepted') === '1') {
+        setScreen('main');
+      }
+    } catch {}
   }
 
   // ===== Main menu =====
@@ -486,11 +499,11 @@
   document.addEventListener('DOMContentLoaded', () => {
     attachWebAppHandlers();
 
-    // Expand Telegram WebApp
+    // Expand Telegram WebApp (ignore if not in Telegram)
     const app = tgApp();
     if (app) {
-      app.expand();
-      app.ready();
+      try { app.expand(); } catch {}
+      try { app.ready(); } catch {}
     }
 
     // Load user data from Telegram IMMEDIATELY
