@@ -10,13 +10,16 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
 <canvas id="bgCanvas"></canvas>
 
 <header class="hdr">
     <div class="hdr-in">
         <div class="hdr-logo"><i class="fa-solid fa-gem"></i> NFT Market</div>
-        <div class="hdr-bal">USDT <span id="balUsdt">0.00</span></div>
+        <div class="hdr-bals">
+            <span class="bal-item"><i class="fa-solid fa-dollar-sign"></i> <span id="bUsdt">0</span></span>
+            <span class="bal-item"><i class="fa-solid fa-star"></i> <span id="bStars">0</span></span>
+            <span class="bal-item"><i class="fa-solid fa-coins"></i> <span id="bTon">0</span></span>
+        </div>
     </div>
 </header>
 
@@ -28,9 +31,7 @@
             <div class="ico"><i class="fa-solid fa-scroll"></i></div>
             <h2>BLACKWIEV NFT Market</h2>
             <p class="dim">Примите правила для доступа к маркету</p>
-            <a class="lnk" href="https://telegra.ph/PRAVILA-MAGAZINA-BLACKWIEV-NFT-MARKET-05-29" target="_blank">
-                <i class="fa-solid fa-arrow-up-right-from-square"></i> Правила маркета
-            </a>
+            <a class="lnk" href="https://telegra.ph/PRAVILA-MAGAZINA-BLACKWIEV-NFT-MARKET-05-29" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Правила маркета</a>
             <label class="chk"><input type="checkbox" id="cbR"><span>Я принимаю условия</span></label>
             <button class="btn" id="btnR" disabled>Принять и войти</button>
         </div>
@@ -40,7 +41,6 @@
     <section class="scr" id="scrMenu">
         <div class="box">
             <h2>Главное меню</h2>
-            <p class="dim">Выберите действие</p>
             <div class="m3">
                 <button class="mbtn" data-go="sell"><i class="fa-solid fa-hand-holding-dollar"></i><span>Продать</span></button>
                 <button class="mbtn" data-go="buy"><i class="fa-solid fa-bag-shopping"></i><span>Купить</span></button>
@@ -49,31 +49,37 @@
         </div>
     </section>
 
-    <!-- ПРОДАТЬ -->
+    <!-- ПРОДАТЬ (пошагово) -->
     <section class="scr" id="scrSell">
         <div class="box">
             <div class="hd"><h2>Продать NFT</h2><button class="bk" data-back="menu"><i class="fa-solid fa-arrow-left"></i></button></div>
-            <div class="c2">
-                <div>
-                    <h3 class="st">Инвентарь</h3>
-                    <div id="sellL" class="vl"></div>
-                    <div class="emp" id="sellE"><i class="fa-solid fa-box-open"></i>Пусто</div>
-                </div>
-                <div>
-                    <h3 class="st">Продажа</h3>
-                    <div class="fld"><label>NFT</label><div class="sn" id="sellS">Не выбран</div></div>
-                    <div class="fld"><label>Валюта</label>
-                        <select id="sellCur">
-                            <option value="USDT">USDT</option>
-                            <option value="STARS">Telegram Stars</option>
-                            <option value="TON">TON</option>
-                        </select>
-                    </div>
-                    <div class="fld"><label>Цена</label><input type="number" min="0.1" step="0.01" id="sellP" placeholder="10"></div>
-                    <button class="btn" id="btnSell" disabled>Выставить</button>
-                    <div class="ms" id="msgSell"></div>
+
+            <!-- Шаг 1: Выбор NFT -->
+            <div class="step" id="step1">
+                <h3 class="st"><span class="stepnum">1</span> Выберите NFT</h3>
+                <div id="sellL" class="vl"></div>
+                <div class="emp" id="sellE"><i class="fa-solid fa-box-open"></i>Нет NFT для продажи</div>
+            </div>
+
+            <!-- Шаг 2: Выбор валюты (скрыт пока не выбран NFT) -->
+            <div class="step locked" id="step2">
+                <h3 class="st"><span class="stepnum">2</span> Выберите валюту</h3>
+                <div class="curgrid">
+                    <button class="curbtn" data-cur="USDT"><i class="fa-solid fa-dollar-sign"></i>USDT</button>
+                    <button class="curbtn" data-cur="STARS"><i class="fa-solid fa-star"></i>Stars</button>
+                    <button class="curbtn" data-cur="TON"><i class="fa-solid fa-coins"></i>TON</button>
                 </div>
             </div>
+
+            <!-- Шаг 3: Установка цены (скрыт пока не выбрана валюта) -->
+            <div class="step locked" id="step3">
+                <h3 class="st"><span class="stepnum">3</span> Установите цену</h3>
+                <div class="sel-nft" id="sellS">—</div>
+                <div class="fld"><label>Цена</label><input type="number" min="0.1" step="0.01" id="sellP" placeholder="Например: 10"></div>
+                <button class="btn" id="btnSell">Выставить на продажу</button>
+            </div>
+
+            <div class="ms" id="msgSell"></div>
             <div class="mgr"><i class="fa-solid fa-headset"></i> Пополнение инвентаря и вывод средств через <b>@ggyyert</b></div>
         </div>
     </section>
@@ -95,7 +101,7 @@
             <div class="ptop">
                 <div class="av" id="av"></div>
                 <div class="pinfo">
-                    <div class="pn" id="pNm">Загрузка...</div>
+                    <div class="pn" id="pNm">—</div>
                     <div class="ps" id="pUs">—</div>
                 </div>
             </div>
@@ -114,13 +120,9 @@
             </div>
             <div class="tc" data-tab="wd">
                 <h3 class="st">Вывод средств</h3>
-                <p class="dim">Комиссия 5%. Минимум: 1 USDT / 50 Stars / 0.5 TON</p>
+                <p class="dim">Комиссия 5%</p>
                 <div class="fld"><label>Валюта</label>
-                    <select id="wdCur">
-                        <option value="USDT">USDT</option>
-                        <option value="STARS">Telegram Stars</option>
-                        <option value="TON">TON</option>
-                    </select>
+                    <select id="wdCur"><option value="USDT">USDT</option><option value="STARS">Telegram Stars</option><option value="TON">TON</option></select>
                 </div>
                 <div class="fld"><label>Сумма</label><input type="number" min="0" step="0.01" id="wdA" placeholder="100"></div>
                 <div class="fld"><label>@username для вывода</label><input type="text" id="wdW" placeholder="@username"></div>
@@ -133,13 +135,13 @@
                 <div id="txL" class="vl"></div>
                 <div class="emp" id="txE"><i class="fa-solid fa-clock-rotate-left"></i>Пусто</div>
             </div>
-            <div class="mgr"><i class="fa-solid fa-headset"></i> Пополнение инвентаря и вывод средств через <b>@ggyyert</b></div>
+            <div class="mgr"><i class="fa-solid fa-headset"></i> Вопросы? Пишите <b>@ggyyert</b></div>
         </div>
     </section>
 
 </main>
 
-<!-- Модалка NFT -->
+<!-- Модалка покупки NFT -->
 <div class="ov" id="ov">
     <div class="modal">
         <button class="mcl" id="mCl"><i class="fa-solid fa-xmark"></i></button>
@@ -154,7 +156,7 @@
         </div>
         <button class="btn btnb" id="btnBuy" disabled>Купить через заявку</button>
         <div class="ms" id="msgBuy"></div>
-        <div class="mgr"><i class="fa-solid fa-headset"></i> Вопросы? Пишите <b>@ggyyert</b></div>
+        <div class="mgr"><i class="fa-solid fa-headset"></i> Вопросы? <b>@ggyyert</b></div>
     </div>
 </div>
 
