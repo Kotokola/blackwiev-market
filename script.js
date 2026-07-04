@@ -1,10 +1,10 @@
 (() => {
   const $ = s => document.getElementById(s);
   const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  const fp = (v,c) => (Number(v)||0).toFixed(2)+' '+(c||'USDT');
+  const fp = (v,c) => (Number(v)||0).toFixed(2)+' '+(c||'');
+  const FEE = 0.05; // 5% комиссия
 
   const tg = () => { try { return window.Telegram?.WebApp || null; } catch { return null; } };
-  const tgU = () => { try { return tg()?.initDataUnsafe?.user || null; } catch { return null; } };
   function send(d) { const a=tg(); if(!a)return; try{a.sendData(typeof d==='string'?d:JSON.stringify(d));}catch{} }
 
   function show(id) {
@@ -14,14 +14,33 @@
   }
   function msg(id,t,k) { const e=$(id); if(!e)return; e.textContent=t||''; e.className='ms'; if(k)e.classList.add(k); }
 
-  // === Profile from Telegram ===
-  let tgUserData = null;
+  // === Parse user from initData (works always, even via menu button) ===
+  function parseUser() {
+    const app = tg();
+    if (!app) return null;
+
+    // Method 1: try initDataUnsafe
+    if (app.initDataUnsafe && app.initDataUnsafe.user) {
+      return app.initDataUnsafe.user;
+    }
+
+    // Method 2: parse initData string
+    if (app.initData) {
+      try {
+        const params = new URLSearchParams(app.initData);
+        const userStr = params.get('user');
+        if (userStr) return JSON.parse(userStr);
+      } catch {}
+    }
+
+    return null;
+  }
+
   let idVisible = false;
 
   function loadProfile() {
-    const u = tgU();
+    const u = parseUser();
     if (u) {
-      tgUserData = u;
       const name = [u.first_name, u.last_name].filter(Boolean).join(' ');
       $('pNm').textContent = name || 'Пользователь';
       $('pUs').textContent = u.username ? '@'+u.username : 'Без username';
@@ -52,9 +71,16 @@
   // === Init ===
   document.addEventListener('DOMContentLoaded', () => {
     const app = tg();
-    if (app) { try{app.expand();}catch{} try{app.ready();}catch{} }
+    if (app) {
+      try { app.expand(); } catch {}
+      try { app.ready(); } catch {}
+    }
 
-    loadProfile();
+    // Small delay to ensure initData is ready
+    setTimeout(() => {
+      loadProfile();
+    }, 100);
+
     initBg();
     initRules();
     initMenu();
@@ -87,8 +113,8 @@
       b.onclick=()=>{
         const g=b.dataset.go;
         show('scr'+g[0].toUpperCase()+g.slice(1));
-        if(g==='sell'){send({action:'get_my_nfts'});}
-        if(g==='buy'){send({action:'get_market'});}
+        if(g==='sell') send({action:'get_my_nfts'});
+        if(g==='buy') send({action:'get_market'});
         if(g==='profile'){loadProfile();send({action:'get_balance'});send({action:'get_my_nfts'});}
       };
     });
@@ -120,7 +146,7 @@
       if(!sellNft)return;
       const p=Number($('sellP').value);
       if(!p||p<=0){msg('msgSell','Введите сумму','wn');return;}
-      send({action:'list_nft',nft_id:sellNft.id,price:p,currency:'USDT'});
+      send({action:'list_nft',nft_id:sellNft.id,price:p,currency:$('sellCur').value});
       msg('msgSell','Отправлено!','ok');
     };
   }
@@ -216,11 +242,30 @@
 
   // === Withdraw ===
   function initWithdraw() {
+    // Live calculator
+    const amtInput = $('wdA');
+    const curSelect = $('wdCur');
+    const calcEl = $('wdCalc');
+
+    function updateCalc() {
+      const a = Number(amtInput.value || 0);
+      const cur = curSelect.value;
+      if (a <= 0) { calcEl.textContent = 'Получите: —'; return; }
+      const after = a * (1 - FEE);
+      calcEl.textContent = 'Получите: ' + after.toFixed(2) + ' ' + cur;
+    }
+    amtInput.oninput = updateCalc;
+    curSelect.onchange = updateCalc;
+
     $('btnWd').onclick=()=>{
       const a=Number($('wdA').value||0);
-      if(a<1){msg('msgWd','Минимум 1 USDT','wn');return;}
-      send({action:'create_withdraw',amount:a,wallet_address:$('wdW').value||null});
-      msg('msgWd','Заявка создана! Менеджер @ggyyert свяжется с вами.','ok');
+      const w=$('wdW').value||'';
+      const cur=$('wdCur').value;
+      if(a<=0){msg('msgWd','Введите сумму','wn');return;}
+      if(!w){msg('msgWd','Укажите @username для вывода','wn');return;}
+      const after = a * (1 - FEE);
+      send({action:'create_withdraw',amount:a,currency:cur,wallet_address:w});
+      msg('msgWd','Заявка создана! К вам придет '+after.toFixed(2)+' '+cur+' на @'+w.replace('@','')+'. Менеджер @ggyyert свяжется с вами.','ok');
     };
   }
 
