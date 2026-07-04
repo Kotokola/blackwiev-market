@@ -3,205 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <title>NFT Market | Blackwiev</title>
+    <title>BLACKWIEV NFT Market</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
     <!-- Header -->
-    <header class="header" id="appHeader">
+    <header class="header">
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <div class="logo-icon">
-                        <i class="fa-brands fa-telegram"></i>
-                    </div>
-                    <span class="logo-text">NFT Market</span>
-                    <span class="logo-badge">Blackwiev</span>
+                    <i class="fa-solid fa-gem"></i>
+                    <span>NFT Market</span>
                 </div>
-                <div class="balance-wrap" id="balanceWrap">
+                <div class="balance-wrap">
                     <div class="balance-item">
-                        <span class="balance-icon">💎</span>
                         <span class="balance-label">USDT</span>
                         <span class="balance-value" id="balUsdt">0.00</span>
-                    </div>
-                    <div class="balance-item">
-                        <span class="balance-icon">🪙</span>
-                        <span class="balance-label">TON</span>
-                        <span class="balance-value" id="balTon">0.00</span>
-                    </div>
-                    <div class="balance-item">
-                        <span class="balance-icon">⭐</span>
-                        <span class="balance-label">STARS</span>
-                        <span class="balance-value" id="balStars">0.00</span>
                     </div>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="app" id="appMain">
-        <!-- SCREEN: Rules -->
-        <section class="screen active" id="screenRules">
-            <div class="rules-container">
-                <div class="rules-card">
-                    <div class="rules-header">
-                        <div class="rules-icon">📜</div>
-                        <h1>Добро пожаловать!</h1>
-                        <p class="rules-subtitle">NFT маркетплейс Blackwiev</p>
-                    </div>
-                    
-                    <div class="rules-body">
-                        <p class="rules-text">
-                            Ознакомьтесь с правилами пользования, чтобы продолжить:
-                        </p>
-                        <a class="rules-link" href="https://telegra.ph/PRAVILA-MAGAZINA-BLACKWIEV-NFT-MARKET-05-29" target="_blank" rel="noopener noreferrer">
-                            <i class="fa-solid fa-book-open"></i>
-                            Правила магазина Blackwiev NFT Market
-                        </a>
-                        
-                        <div class="rules-check">
-                            <label class="checkbox-container">
-                                <input type="checkbox" id="rulesAcceptedCheckbox">
-                                <span class="checkmark"></span>
-                                <span class="checkbox-label">Я принимаю условия и соглашаюсь с правилами</span>
-                            </label>
-                        </div>
+    <!-- Main container -->
+    <main class="app">
+        <!-- Rules -->
+        <section class="screen" id="screenRules">
+            <div class="card">
+                <div class="card-icon"><i class="fa-solid fa-scroll"></i></div>
+                <h2 class="screen-title">Добро пожаловать в NFT маркет!</h2>
+                <p class="muted">Ознакомьтесь с правилами, чтобы продолжить:</p>
 
-                        <button class="btn-primary btn-large btn-rules" id="btnAcceptRules" disabled>
-                            <i class="fa-solid fa-check-circle"></i>
-                            Принять и продолжить
-                        </button>
+                <a class="rules-link" href="https://telegra.ph/PRAVILA-MAGAZINA-BLACKWIEV-NFT-MARKET-05-29" target="_blank" rel="noopener noreferrer">
+                    <i class="fa-solid fa-link"></i> Правила NFT маркета
+                </a>
 
-                        <div class="status" id="rulesStatus"></div>
-                    </div>
-                </div>
+                <label class="check-row">
+                    <input type="checkbox" id="rulesAcceptedCheckbox">
+                    <span class="checkmark"></span>
+                    <span>Я принимаю условия</span>
+                </label>
+
+                <button class="btn-primary btn-large" id="btnAcceptRules" disabled>
+                    <i class="fa-solid fa-check"></i> Принять и продолжить
+                </button>
+
+                <div class="status" id="rulesStatus"></div>
             </div>
         </section>
 
-        <!-- SCREEN: Main Menu -->
+        <!-- Main menu -->
         <section class="screen hidden" id="screenMainMenu">
-            <div class="menu-container">
-                <div class="menu-header">
-                    <h2 class="menu-title">Главное меню</h2>
-                    <p class="menu-subtitle">Выберите действие</p>
-                </div>
+            <div class="card">
+                <h2 class="screen-title">Главное меню</h2>
+                <p class="muted">Выберите действие:</p>
 
                 <div class="menu-grid">
-                    <button class="menu-card-btn" data-go="sell">
-                        <div class="menu-card-icon sell-icon">
-                            <i class="fa-solid fa-hand-holding-dollar"></i>
-                        </div>
-                        <div class="menu-card-content">
-                            <span class="menu-card-title">Продать</span>
-                            <span class="menu-card-desc">Выставить NFT на продажу</span>
-                        </div>
-                        <i class="fa-solid fa-chevron-right menu-arrow"></i>
+                    <button class="menu-btn" data-go="sell">
+                        <i class="fa-solid fa-hand-holding-dollar"></i>
+                        <span>Продать</span>
                     </button>
-
-                    <button class="menu-card-btn" data-go="buy">
-                        <div class="menu-card-icon buy-icon">
-                            <i class="fa-solid fa-bag-shopping"></i>
-                        </div>
-                        <div class="menu-card-content">
-                            <span class="menu-card-title">Купить</span>
-                            <span class="menu-card-desc">Посмотреть доступные NFT</span>
-                        </div>
-                        <i class="fa-solid fa-chevron-right menu-arrow"></i>
+                    <button class="menu-btn" data-go="buy">
+                        <i class="fa-solid fa-bag-shopping"></i>
+                        <span>Купить</span>
                     </button>
-
-                    <button class="menu-card-btn" data-go="profile">
-                        <div class="menu-card-icon profile-icon">
-                            <i class="fa-solid fa-user"></i>
-                        </div>
-                        <div class="menu-card-content">
-                            <span class="menu-card-title">Профиль</span>
-                            <span class="menu-card-desc">Управление аккаунтом</span>
-                        </div>
-                        <i class="fa-solid fa-chevron-right menu-arrow"></i>
+                    <button class="menu-btn" data-go="profile">
+                        <i class="fa-solid fa-user"></i>
+                        <span>Профиль</span>
                     </button>
-                </div>
-
-                <div class="menu-footer">
-                    <span class="menu-version">v2.0 • Blackwiev NFT Market</span>
                 </div>
             </div>
         </section>
 
-        <!-- SCREEN: Sell -->
+        <!-- Sell -->
         <section class="screen hidden" id="screenSell">
-            <div class="screen-container">
-                <div class="screen-header">
-                    <button class="btn-back" data-back="main">
-                        <i class="fa-solid fa-arrow-left"></i>
-                    </button>
+            <div class="card">
+                <div class="screen-head">
                     <h2 class="screen-title">Продать NFT</h2>
-                    <div class="screen-header-spacer"></div>
+                    <button class="btn-back" data-back="main">
+                        <i class="fa-solid fa-arrow-left"></i> Назад
+                    </button>
                 </div>
 
-                <div class="sell-grid">
-                    <div class="sell-inventory">
-                        <h3 class="section-title">
-                            <i class="fa-solid fa-box"></i>
-                            Ваш инвентарь
-                        </h3>
-                        <div class="inventory-list" id="sellInventory">
-                            <div class="empty-state" id="sellInvEmpty">
-                                <i class="fa-solid fa-box-open"></i>
-                                <p>Предметов пока нет</p>
-                                <span class="empty-hint">Пополните через админа: @ggyyert</span>
-                            </div>
+                <div class="grid-2">
+                    <div>
+                        <h3 class="sub-title"><i class="fa-solid fa-box-open"></i> Инвентарь</h3>
+                        <div class="list" id="sellInventory"></div>
+                        <div class="status muted empty-state" id="sellInvEmpty">
+                            <i class="fa-solid fa-box-open"></i>
+                            Предметов пока нет
                         </div>
                     </div>
 
-                    <div class="sell-form">
-                        <h3 class="section-title">
-                            <i class="fa-solid fa-sliders-h"></i>
-                            Условия продажи
-                        </h3>
+                    <div>
+                        <h3 class="sub-title"><i class="fa-solid fa-tag"></i> Условия продажи</h3>
 
-                        <div class="selected-nft-wrap">
-                            <label class="form-label">Выбранный NFT</label>
-                            <div class="selected-nft" id="sellSelectedNft">
-                                <span class="placeholder">Выберите NFT из инвентаря</span>
-                            </div>
+                        <div class="field">
+                            <label>Выбранный NFT</label>
+                            <div class="selected-nft" id="sellSelectedNft">Не выбран</div>
                         </div>
 
-                        <div class="form-group">
-                            <label class="form-label">Валюта</label>
-                            <div class="currency-select">
-                                <button class="currency-option active" data-currency="USDT">
-                                    <span class="currency-icon">💎</span>
-                                    USDT
-                                </button>
-                                <button class="currency-option" data-currency="TON">
-                                    <span class="currency-icon">🪙</span>
-                                    TON
-                                </button>
-                                <button class="currency-option" data-currency="STARS">
-                                    <span class="currency-icon">⭐</span>
-                                    STARS
-                                </button>
-                            </div>
-                            <input type="hidden" id="sellCurrency" value="USDT">
+                        <div class="field">
+                            <label>Валюта</label>
+                            <select id="sellCurrency">
+                                <option value="USDT">USDT</option>
+                            </select>
                         </div>
 
-                        <div class="form-group">
-                            <label class="form-label">Цена</label>
-                            <div class="price-input-wrap">
-                                <input type="number" min="0" step="0.01" id="sellPriceInput" placeholder="0.00">
-                                <span class="price-currency" id="sellPriceCurrency">USDT</span>
-                            </div>
+                        <div class="field">
+                            <label>Цена</label>
+                            <input type="number" min="0.1" step="0.01" id="sellPriceInput" placeholder="Например: 10" />
                         </div>
 
-                        <button class="btn-primary btn-large btn-sell" id="btnListNft" disabled>
-                            <i class="fa-solid fa-rocket"></i>
-                            Выставить на продажу
+                        <button class="btn-primary btn-large" id="btnListNft" disabled>
+                            <i class="fa-solid fa-list"></i> Выставить на продажу
                         </button>
 
                         <div class="status" id="sellStatus"></div>
@@ -210,154 +127,95 @@
             </div>
         </section>
 
-        <!-- SCREEN: Buy -->
+        <!-- Buy -->
         <section class="screen hidden" id="screenBuy">
-            <div class="screen-container">
-                <div class="screen-header">
+            <div class="card">
+                <div class="screen-head">
+                    <h2 class="screen-title">Магазин</h2>
                     <button class="btn-back" data-back="main">
-                        <i class="fa-solid fa-arrow-left"></i>
+                        <i class="fa-solid fa-arrow-left"></i> Назад
                     </button>
-                    <h2 class="screen-title">Купить NFT</h2>
-                    <div class="screen-header-spacer"></div>
                 </div>
 
-                <div class="market-grid" id="marketList">
-                    <div class="empty-state" id="marketEmpty">
-                        <i class="fa-solid fa-store-slash"></i>
-                        <p>Пока нет доступных NFT</p>
-                        <span class="empty-hint">Загляните позже!</span>
-                    </div>
+                <div class="list" id="marketList"></div>
+                <div class="status muted empty-state" id="marketEmpty">
+                    <i class="fa-solid fa-store"></i>
+                    Пока нет доступных NFT
                 </div>
             </div>
         </section>
 
-        <!-- SCREEN: Profile -->
+        <!-- Profile -->
         <section class="screen hidden" id="screenProfile">
-            <div class="screen-container">
-                <div class="screen-header">
-                    <button class="btn-back" data-back="main">
-                        <i class="fa-solid fa-arrow-left"></i>
-                    </button>
+            <div class="card">
+                <div class="screen-head">
                     <h2 class="screen-title">Профиль</h2>
-                    <div class="screen-header-spacer"></div>
+                    <button class="btn-back" data-back="main">
+                        <i class="fa-solid fa-arrow-left"></i> Назад
+                    </button>
                 </div>
 
-                <div class="profile-card">
-                    <div class="profile-top">
-                        <div class="profile-avatar" id="profileAvatar">
-                            <i class="fa-solid fa-user"></i>
+                <div class="profile-top">
+                    <div class="avatar" id="profileAvatar"><i class="fa-solid fa-user"></i></div>
+                    <div class="profile-info">
+                        <div class="profile-name" id="profileName">Загрузка...</div>
+                        <div class="profile-meta">
+                            <span><i class="fa-solid fa-at"></i> <span id="profileUsername">—</span></span>
+                            <span><i class="fa-solid fa-id-card"></i> ID: <span id="profileId">—</span></span>
                         </div>
-                        <div class="profile-info">
-                            <div class="profile-name" id="profileName">—</div>
-                            <div class="profile-username" id="profileUsername">@username</div>
-                            <div class="profile-id-wrap">
-                                <span class="profile-id-label">ID:</span>
-                                <span class="profile-id" id="profileId">••••••••</span>
-                                <button class="btn-toggle-id" id="btnToggleId">
-                                    <i class="fa-solid fa-eye"></i>
-                                </button>
-                            </div>
+                    </div>
+                </div>
+
+                <div class="tabs">
+                    <button class="tab active" data-profile-tab="inventory">
+                        <i class="fa-solid fa-box"></i> Инвентарь
+                    </button>
+                    <button class="tab" data-profile-tab="withdraw">
+                        <i class="fa-solid fa-wallet"></i> Вывод
+                    </button>
+                    <button class="tab" data-profile-tab="tx">
+                        <i class="fa-solid fa-clock-rotate-left"></i> История
+                    </button>
+                </div>
+
+                <div class="tab-body" id="profileTabBody">
+                    <!-- Inventory -->
+                    <div class="profile-section" data-tab="inventory">
+                        <div class="list" id="profileInventory"></div>
+                        <div class="status muted empty-state" id="profileInvEmpty">
+                            <i class="fa-solid fa-box-open"></i>
+                            Предметов пока нет
                         </div>
                     </div>
 
-                    <div class="profile-tabs">
-                        <button class="tab active" data-profile-tab="inventory">
-                            <i class="fa-solid fa-box"></i>
-                            Инвентарь
+                    <!-- Withdraw -->
+                    <div class="profile-section hidden" data-tab="withdraw">
+                        <h3 class="sub-title"><i class="fa-solid fa-wallet"></i> Заявка на вывод</h3>
+
+                        <div class="field">
+                            <label>Сумма</label>
+                            <input type="number" min="1" step="0.01" id="withdrawAmountInput" placeholder="Минимум 1 USDT" />
+                        </div>
+
+                        <div class="field">
+                            <label>Кошелёк (опционально)</label>
+                            <input type="text" id="withdrawWalletInput" placeholder="Адрес/реквизиты" />
+                        </div>
+
+                        <button class="btn-primary btn-large" id="btnCreateWithdraw">
+                            <i class="fa-solid fa-paper-plane"></i> Создать заявку
                         </button>
-                        <button class="tab" data-profile-tab="withdraw">
-                            <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                            Вывод
-                        </button>
-                        <button class="tab" data-profile-tab="tx">
-                            <i class="fa-solid fa-clock-rotate-left"></i>
-                            История
-                        </button>
+
+                        <div class="status" id="withdrawStatus"></div>
                     </div>
 
-                    <div class="tab-content" id="profileTabBody">
-                        <!-- Inventory -->
-                        <div class="tab-pane active" data-tab="inventory">
-                            <div class="inventory-grid" id="profileInventory">
-                                <div class="empty-state" id="profileInvEmpty">
-                                    <i class="fa-solid fa-box-open"></i>
-                                    <p>Предметов пока нет</p>
-                                    <span class="empty-hint">Пополните через админа: @ggyyert</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Withdraw -->
-                        <div class="tab-pane hidden" data-tab="withdraw">
-                            <div class="withdraw-form">
-                                <h3 class="section-title">
-                                    <i class="fa-solid fa-hand-holding-usd"></i>
-                                    Заявка на вывод
-                                </h3>
-
-                                <div class="withdraw-info">
-                                    <div class="withdraw-balance">
-                                        <span>Доступно для вывода:</span>
-                                        <div class="withdraw-balance-items">
-                                            <span class="withdraw-bal-item">💎 <span id="withdrawBalUsdt">0.00</span> USDT</span>
-                                            <span class="withdraw-bal-item">🪙 <span id="withdrawBalTon">0.00</span> TON</span>
-                                            <span class="withdraw-bal-item">⭐ <span id="withdrawBalStars">0.00</span> STARS</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label">Валюта</label>
-                                    <div class="currency-select">
-                                        <button class="currency-option active" data-currency="USDT">
-                                            <span class="currency-icon">💎</span>
-                                            USDT
-                                        </button>
-                                        <button class="currency-option" data-currency="TON">
-                                            <span class="currency-icon">🪙</span>
-                                            TON
-                                        </button>
-                                        <button class="currency-option" data-currency="STARS">
-                                            <span class="currency-icon">⭐</span>
-                                            STARS
-                                        </button>
-                                    </div>
-                                    <input type="hidden" id="withdrawCurrency" value="USDT">
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label">Сумма</label>
-                                    <input type="number" min="0.01" step="0.01" id="withdrawAmountInput" placeholder="0.00">
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label">Кошелёк (адрес для вывода)</label>
-                                    <input type="text" id="withdrawWalletInput" placeholder="Введите адрес кошелька">
-                                </div>
-
-                                <div class="withdraw-note">
-                                    <i class="fa-solid fa-info-circle"></i>
-                                    <span>После создания заявки напишите админу @ggyyert для подтверждения</span>
-                                </div>
-
-                                <button class="btn-primary btn-large" id="btnCreateWithdraw">
-                                    <i class="fa-solid fa-paper-plane"></i>
-                                    Создать заявку на вывод
-                                </button>
-
-                                <div class="status" id="withdrawStatus"></div>
-                            </div>
-                        </div>
-
-                        <!-- Transactions -->
-                        <div class="tab-pane hidden" data-tab="tx">
-                            <div class="tx-list" id="txList">
-                                <div class="empty-state" id="txEmpty">
-                                    <i class="fa-solid fa-receipt"></i>
-                                    <p>История пуста</p>
-                                    <span class="empty-hint">Здесь будут отображаться ваши транзакции</span>
-                                </div>
-                            </div>
+                    <!-- Transactions -->
+                    <div class="profile-section hidden" data-tab="tx">
+                        <h3 class="sub-title"><i class="fa-solid fa-clock-rotate-left"></i> История транзакций</h3>
+                        <div class="list" id="txList"></div>
+                        <div class="status muted empty-state" id="txEmpty">
+                            <i class="fa-solid fa-inbox"></i>
+                            История пока пустая
                         </div>
                     </div>
                 </div>
@@ -365,44 +223,41 @@
         </section>
     </main>
 
-    <!-- Modal: NFT Details -->
+    <!-- Modal for NFT details -->
     <div class="modal" id="nftModal">
-        <div class="modal-overlay" onclick="closeModal()"></div>
         <div class="modal-content">
-            <button class="modal-close" onclick="closeModal()">
-                <i class="fa-solid fa-xmark"></i>
+            <button class="modal-close" id="modalCloseBtn">
+                <i class="fa-solid fa-times"></i>
             </button>
             <div class="modal-body">
-                <div class="modal-image-wrap">
+                <div class="modal-image">
                     <img id="modalImage" src="" alt="NFT">
-                    <div class="modal-badge" id="modalRarity">—</div>
+                    <div class="modal-rarity-badge" id="modalRarity">—</div>
                 </div>
                 <div class="modal-info">
                     <h2 id="modalTitle">—</h2>
-                    <div class="modal-meta">
+
+                    <div class="modal-price-row">
                         <span class="modal-price" id="modalPrice">—</span>
-                        <span class="modal-owner" id="modalOwner">
-                            <i class="fa-solid fa-user"></i>
-                            <span>—</span>
-                        </span>
+                        <span class="modal-seller" id="modalOwner">—</span>
                     </div>
-                    <p id="modalDescription" class="modal-desc">—</p>
-                    
-                    <div class="modal-stats">
-                        <div class="modal-stat">
-                            <span class="stat-label">Ссылка на NFT</span>
-                            <span class="stat-value" id="modalTokenLink">—</span>
+
+                    <p id="modalDescription" class="muted">—</p>
+
+                    <div class="modal-details">
+                        <div class="detail-row">
+                            <span class="detail-label"><i class="fa-solid fa-link"></i> Ссылка на NFT</span>
+                            <span class="detail-value" id="modalTokenLink">—</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label"><i class="fa-solid fa-gem"></i> Редкость</span>
+                            <span class="detail-value" id="modalRarityText">—</span>
                         </div>
                     </div>
 
-                    <button class="btn-primary btn-large btn-buy-modal" id="btnConfirmBuy" disabled>
-                        <i class="fa-solid fa-cart-shopping"></i>
-                        Купить
+                    <button class="btn-primary btn-large btn-buy" id="btnConfirmBuy" disabled>
+                        <i class="fa-solid fa-cart-shopping"></i> Купить через заявку
                     </button>
-                    <div class="modal-note">
-                        <i class="fa-solid fa-info-circle"></i>
-                        <span>После покупки напишите админу @ggyyert для завершения сделки</span>
-                    </div>
 
                     <div class="status" id="modalBuyStatus"></div>
                 </div>
@@ -410,30 +265,6 @@
         </div>
     </div>
 
-    <!-- Seasonal Effects -->
-    <div class="seasonal-effects" id="seasonalEffects" aria-hidden="true">
-        <div class="sun-rays" id="sunRays"></div>
-        <div class="falling-leaves" id="fallingLeaves"></div>
-        <div class="snowflakes" id="snowflakes"></div>
-        <div class="falling-flowers" id="fallingFlowers"></div>
-    </div>
-
-    <!-- Season Toggle -->
-    <div class="season-toggle">
-        <button class="season-btn" data-season="summer" title="Лето">
-            <i class="fa-solid fa-sun"></i>
-        </button>
-        <button class="season-btn" data-season="autumn" title="Осень">
-            <i class="fa-solid fa-leaf"></i>
-        </button>
-        <button class="season-btn" data-season="winter" title="Зима">
-            <i class="fa-solid fa-snowflake"></i>
-        </button>
-        <button class="season-btn" data-season="spring" title="Весна">
-            <i class="fa-solid fa-flower"></i>
-        </button>
-    </div>
-
-    <script src="script.js?v=2.1.0"></script>
+    <script src="script.js"></script>
 </body>
 </html>
