@@ -4,84 +4,63 @@ const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>
 const fp=(v,c)=>(Number(v)||0).toFixed(2)+' '+(c||'');
 const FEE=0.05;
 
-// === Telegram ===
 function tgApp(){try{return window.Telegram?.WebApp||null}catch{return null}}
 function tgSend(d){const a=tgApp();if(!a)return;try{a.sendData(typeof d==='string'?d:JSON.stringify(d))}catch{}}
 
-// === State ===
 let balances={usdt:0,stars:0,ton:0};
 let idVisible=false,sellNft=null,sellCurrency=null;
-let _profileDone=false;
 
-function show(id){
-  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('act'));
-  const el=$(id);if(el)el.classList.add('act');
-  window.scrollTo(0,0);
-}
+function show(id){document.querySelectorAll('.scr').forEach(s=>s.classList.remove('act'));const el=$(id);if(el)el.classList.add('act');window.scrollTo(0,0)}
 function msg(id,t,k){const e=$(id);if(!e)return;e.textContent=t||'';e.className='ms';if(k)e.classList.add(k)}
 
-// ===== USER PROFILE =====
-// Three strategies to get user data:
-// 1) Telegram initDataUnsafe.user
-// 2) Parse initData URL params
-// 3) URL search params (?uid=...&un=...&fn=...) injected by bot
-function getUser(){
-  const a=tgApp();
-  if(!a)return{first_name:'Пользователь',username:'',id:0};
-  // Strategy 1
-  try{if(a.initDataUnsafe&&a.initDataUnsafe.user)return a.initDataUnsafe.user}catch{}
-  // Strategy 2
-  try{if(a.initData){const p=new URLSearchParams(a.initData);const u=p.get('user');if(u)return JSON.parse(u)}}catch{}
-  // Strategy 3: URL params
-  try{
-    const p=new URLSearchParams(window.location.search);
-    const uid=p.get('uid');
-    if(uid)return{id:Number(uid),user_id:Number(uid),username:p.get('un')||'',first_name:p.get('fn')||''};
-  }catch{}
-  return null;
-}
-
-function applyProfile(u){
-  if(!u||_profileDone)return;
-  _profileDone=true;
+// ===== PROFILE =====
+function fillProfile(name,username,id,photoUrl){
   const av=$('av');
-  const name=[u.first_name,u.last_name].filter(Boolean).join(' ');
   $('pNm').textContent=name||'Пользователь';
-  $('pUs').textContent=u.username?'@'+u.username:'—';
-  $('pId').textContent=String(u.id||u.user_id||'—');
-  if(u.photo_url)av.innerHTML='<img src="'+esc(u.photo_url)+'" alt="">';
-  else av.textContent=(u.first_name||'?')[0].toUpperCase();
+  $('pUs').textContent=username?'@'+username:'—';
+  $('pId').textContent=String(id||'—');
+  if(photoUrl)av.innerHTML='<img src="'+esc(photoUrl)+'" alt="">';
+  else av.textContent=(name||'?')[0].toUpperCase();
 }
 
 function loadProfile(){
-  const u=getUser();
-  if(u&&u.first_name&&u.id){
-    applyProfile(u);
-  }else{
-    // Fallback: show minimal profile, try to get data from bot
-    $('pNm').textContent='Пользователь';
-    $('pUs').textContent='—';
-    $('pId').textContent='—';
-    $('av').textContent='?';
-    tgSend({action:'get_balance'});
+  // Try Telegram data first
+  const a=tgApp();
+  if(a){
+    // initDataUnsafe.user
+    try{if(a.initDataUnsafe&&a.initDataUnsafe.user){
+      const u=a.initDataUnsafe.user;
+      fillProfile([u.first_name,u.last_name].filter(Boolean).join(' '),u.username,u.id,u.photo_url);
+      return;
+    }}catch{}
+    // initData string
+    try{if(a.initData){
+      const p=new URLSearchParams(a.initData);
+      const raw=p.get('user');
+      if(raw){const u=JSON.parse(raw);fillProfile([u.first_name,u.last_name].filter(Boolean).join(' '),u.username,u.id,u.photo_url);return;}
+    }}catch{}
   }
+  // URL params from bot
+  try{
+    const p=new URLSearchParams(window.location.search);
+    const uid=p.get('uid');
+    if(uid){fillProfile(p.get('fn')||'Пользователь',p.get('un')||'',Number(uid));return;}
+  }catch{}
+  // Nothing available — show placeholder, bot response will fill it
+  fillProfile('Пользователь','',0,null);
+  tgSend({action:'get_balance'});
 }
 
-function toggleId(){
-  idVisible=!idVisible;
-  $('pId').classList.toggle('show',idVisible);
-  $('btnToggleId').textContent=idVisible?'Скрыть':'Показать';
-}
+function toggleId(){idVisible=!idVisible;$('pId').classList.toggle('show',idVisible);$('btnToggleId').textContent=idVisible?'Скрыть':'Показать'}
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded',()=>{
   const a=tgApp();
   if(a){try{a.expand()}catch{}try{a.ready()}catch{}}
-
-  // Try profile immediately, then retry after bot responds
+  // Multiple attempts to catch Telegram SDK initialization
   loadProfile();
-  setTimeout(loadProfile,500);
-  setTimeout(loadProfile,1500);
+  setTimeout(loadProfile,300);
+  setTimeout(loadProfile,1000);
 
   initBg();initRules();initMenu();initTabs();initSell();initBuy();initWithdraw();
   $('btnToggleId').onclick=toggleId;
@@ -194,7 +173,6 @@ function renderMarket(items){
   });
 }
 
-// ===== Profile NFTs =====
 function renderProfInv(items){
   const el=$('prInv'),em=$('prInvE');if(!el)return;
   el.innerHTML='';em.style.display=items.length?'none':'block';
@@ -206,7 +184,6 @@ function renderProfInv(items){
   renderSell(items);
 }
 
-// ===== Tx =====
 function renderTx(items){
   const el=$('txL'),em=$('txE');if(!el)return;
   el.innerHTML='';em.style.display=items.length?'none':'block';
@@ -218,15 +195,15 @@ function renderTx(items){
   });
 }
 
-// ===== Balance =====
+// ===== Balance — ALWAYS updates profile from bot data =====
 function renderBalance(m){
   balances.usdt=Number(m.balance)||0;balances.stars=Number(m.stars)||0;balances.ton=Number(m.ton)||0;
   if($('bUsdt'))$('bUsdt').textContent=balances.usdt.toFixed(2);
   if($('bStars'))$('bStars').textContent=balances.stars.toFixed(0);
   if($('bTon'))$('bTon').textContent=balances.ton.toFixed(2);
-  // Bot sends user_id — use it for profile
-  if(m.user_id&&m.first_name&&!_profileDone){
-    applyProfile({id:m.user_id,user_id:m.user_id,first_name:m.first_name,username:m.username||''});
+  // Bot always sends user_id/first_name/username — use them
+  if(m.user_id){
+    fillProfile(m.first_name||'Пользователь',m.username||'',m.user_id,null);
   }
 }
 
