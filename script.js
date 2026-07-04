@@ -14,13 +14,17 @@
   }
   function msg(id,t,k) { const e=$(id); if(!e)return; e.textContent=t||''; e.className='ms'; if(k)e.classList.add(k); }
 
-  // === User data — parse from initData (works via menu button) ===
+  // === User data ===
+  let botUserData = null; // from bot response (fallback)
+  let balances = {usdt:0, stars:0, ton:0};
+  let idVisible = false;
+  let sellNft = null;
+  let sellCurrency = null;
+
   function parseUser() {
     const app = tg();
     if (!app) return null;
-    // Method 1: initDataUnsafe
     try { if (app.initDataUnsafe && app.initDataUnsafe.user) return app.initDataUnsafe.user; } catch {}
-    // Method 2: parse initData URL params
     try {
       if (app.initData) {
         const p = new URLSearchParams(app.initData);
@@ -31,28 +35,30 @@
     return null;
   }
 
-  let idVisible = false;
-  let sellNft = null;
-  let sellCurrency = null;
+  function getUser() {
+    return parseUser() || botUserData;
+  }
 
   function loadProfile() {
-    const u = parseUser();
+    const u = getUser();
     const av = $('av');
     if (u) {
       const name = [u.first_name, u.last_name].filter(Boolean).join(' ');
       $('pNm').textContent = name || 'Пользователь';
       $('pUs').textContent = u.username ? '@'+u.username : 'Без username';
-      $('pId').textContent = String(u.id);
+      $('pId').textContent = String(u.id || u.user_id || '—');
       if (u.photo_url) {
         av.innerHTML = '<img src="'+esc(u.photo_url)+'" alt="">';
       } else {
         av.textContent = (u.first_name||'?')[0].toUpperCase();
       }
     } else {
-      $('pNm').textContent = 'Пользователь';
-      $('pUs').textContent = 'Откройте через Telegram';
-      $('pId').textContent = '—';
-      av.textContent = '?';
+      $('pNm').textContent = 'Загрузка...';
+      $('pUs').textContent = '...';
+      $('pId').textContent = '...';
+      av.textContent = '...';
+      // Request balance to get user data from bot
+      send({action:'get_balance'});
     }
   }
 
@@ -140,7 +146,6 @@
   }
 
   function initSell() {
-    // Currency selection
     document.querySelectorAll('.curbtn').forEach(btn=>{
       btn.onclick=()=>{
         document.querySelectorAll('.curbtn').forEach(b=>b.classList.remove('sel'));
@@ -151,7 +156,6 @@
       };
     });
 
-    // Final submit
     $('btnSell').onclick=()=>{
       if(!sellNft||!sellCurrency){msg('msgSell','Выберите NFT и валюту','wn');return;}
       const p=Number($('sellP').value);
@@ -254,9 +258,23 @@
 
   // === Balance (3 currencies) ===
   function renderBalance(m) {
-    $('bUsdt').textContent = (Number(m.balance)||0).toFixed(2);
-    $('bStars').textContent = (Number(m.stars)||0).toFixed(0);
-    $('bTon').textContent = (Number(m.ton)||0).toFixed(2);
+    balances.usdt = Number(m.balance)||0;
+    balances.stars = Number(m.stars)||0;
+    balances.ton = Number(m.ton)||0;
+    $('bUsdt').textContent = balances.usdt.toFixed(2);
+    $('bStars').textContent = balances.stars.toFixed(0);
+    $('bTon').textContent = balances.ton.toFixed(2);
+
+    // Also use bot data as fallback for profile
+    if (m.user_id && !parseUser()) {
+      botUserData = {
+        id: m.user_id,
+        user_id: m.user_id,
+        first_name: m.first_name || '',
+        username: m.username || ''
+      };
+      loadProfile();
+    }
   }
 
   // === Withdraw ===
@@ -274,8 +292,17 @@
       const a=Number($('wdA').value||0);
       const w=$('wdW').value||'';
       const cur=$('wdCur').value;
+
       if(a<=0){msg('msgWd','Введите сумму','wn');return;}
       if(!w){msg('msgWd','Укажите @username для вывода','wn');return;}
+
+      // Balance check
+      const minMap = {USDT:1, STARS:50, TON:0.5};
+      if(a < minMap[cur]){msg('msgWd','Минимум: '+minMap[cur]+' '+cur,'wn');return;}
+      if(cur==='USDT' && a>balances.usdt){msg('msgWd','Недостаточно средств. Баланс: '+balances.usdt.toFixed(2)+' USDT','wn');return;}
+      if(cur==='STARS' && a>balances.stars){msg('msgWd','Недостаточно средств. Баланс: '+balances.stars+' Stars','wn');return;}
+      if(cur==='TON' && a>balances.ton){msg('msgWd','Недостаточно средств. Баланс: '+balances.ton.toFixed(2)+' TON','wn');return;}
+
       const after=a*(1-FEE);
       send({action:'create_withdraw',amount:a,currency:cur,wallet_address:w});
       msg('msgWd','Заявка создана! К вам придет '+after.toFixed(2)+' '+cur+' на @'+w.replace('@','')+'. Менеджер @ggyyert свяжется с вами.','ok');
