@@ -12,6 +12,7 @@
   };
 
   const $ = (id) => document.getElementById(id);
+  let currentUser = null;
 
   const screens = {
     rules: $('screenRules'),
@@ -67,6 +68,38 @@
     return `${num.toFixed(2)} ${escapeHtml(currency || 'USDT')}`;
   }
 
+  // ===== Get Telegram user data immediately =====
+  function getTelegramUser() {
+    const app = tgApp();
+    if (app && app.initDataUnsafe && app.initDataUnsafe.user) {
+      return app.initDataUnsafe.user;
+    }
+    return null;
+  }
+
+  function renderProfileFromTelegram() {
+    const tgUser = getTelegramUser();
+    if (!tgUser) return;
+
+    currentUser = tgUser;
+
+    const name = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ');
+    setText('profileName', name || 'Пользователь');
+    setText('profileUsername', tgUser.username || '—');
+    setText('profileId', String(tgUser.id));
+
+    // Set avatar
+    const avatarEl = $('profileAvatar');
+    if (avatarEl) {
+      if (tgUser.photo_url) {
+        avatarEl.innerHTML = `<img src="${escapeHtml(tgUser.photo_url)}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+      } else {
+        const initials = (tgUser.first_name || '?')[0].toUpperCase();
+        avatarEl.innerHTML = initials;
+      }
+    }
+  }
+
   // ===== Rules =====
   function initRules() {
     const cb = $('rulesAcceptedCheckbox');
@@ -82,6 +115,8 @@
     btn.addEventListener('click', () => {
       try {
         tgSend({ action: ACTION.ACCEPT_RULES });
+        // Immediately go to main menu
+        setScreen('main');
       } catch (e) {
         setStatus('rulesStatus', 'Запусти mini app внутри Telegram.', 'danger');
       }
@@ -95,7 +130,12 @@
         const go = btn.dataset.go;
         if (go === 'sell') { setScreen('sell'); requestMyNfts(); }
         if (go === 'buy') { setScreen('buy'); requestMarket(); }
-        if (go === 'profile') { setScreen('profile'); requestBalance(); requestMyNfts(); }
+        if (go === 'profile') {
+          setScreen('profile');
+          renderProfileFromTelegram();
+          requestBalance();
+          requestMyNfts();
+        }
       });
     });
 
@@ -131,26 +171,21 @@
     const list = $('sellInventory');
     const empty = $('sellInvEmpty');
     const selected = $('sellSelectedNft');
-    const currency = $('sellCurrency');
     const priceInput = $('sellPriceInput');
     const btn = $('btnListNft');
-    const status = $('sellStatus');
 
     let selectedNftId = null;
 
     btn.addEventListener('click', () => {
       if (!selectedNftId) return;
       const price = Number(priceInput.value);
-      const cur = currency.value;
-
       if (!Number.isFinite(price) || price <= 0) {
         setStatus('sellStatus', 'Введите сумму > 0', 'warning');
         return;
       }
-
       try {
         setStatus('sellStatus', 'Отправляю...', 'info');
-        tgSend({ action: ACTION.LIST_NFT, nft_id: selectedNftId, price, currency: cur });
+        tgSend({ action: ACTION.LIST_NFT, nft_id: selectedNftId, price, currency: 'USDT' });
       } catch {
         setStatus('sellStatus', 'Ошибка Telegram WebApp', 'danger');
       }
@@ -161,14 +196,13 @@
         list.innerHTML = '';
         empty.style.display = items && items.length ? 'none' : 'block';
         if (!items || !items.length) return;
-
         items.forEach(nft => {
           const b = document.createElement('button');
           b.className = 'list-item';
           b.type = 'button';
           b.innerHTML = `
             <div class="list-item-media">
-              <img src="${escapeHtml(nft.image_url || '')}" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23333%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%23888%22 font-size=%2230%22>NFT</text></svg>'">
+              <img src="${escapeHtml(nft.image_url || '')}" alt="" onerror="this.style.display='none'">
             </div>
             <div class="list-item-body">
               <div class="list-item-title">${escapeHtml(nft.name || 'NFT')}</div>
@@ -206,6 +240,7 @@
           currency: selectedNft.currency || 'USDT'
         });
         setStatus('modalBuyStatus', 'Заявка отправлена!', 'success');
+        setTimeout(() => closeModal(), 1500);
       } catch {
         setStatus('modalBuyStatus', 'Ошибка', 'danger');
       }
@@ -216,14 +251,13 @@
         marketList.innerHTML = '';
         empty.style.display = items && items.length ? 'none' : 'block';
         if (!items || !items.length) return;
-
         items.forEach(nft => {
           const card = document.createElement('button');
           card.type = 'button';
           card.className = 'market-card';
           card.innerHTML = `
             <div class="market-card-media">
-              <img src="${escapeHtml(nft.image_url || '')}" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23333%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%23888%22 font-size=%2230%22>NFT</text></svg>'">
+              <img src="${escapeHtml(nft.image_url || '')}" alt="" onerror="this.style.display='none'">
             </div>
             <div class="market-card-body">
               <div class="market-card-title">${escapeHtml(nft.name || 'NFT')}</div>
@@ -259,7 +293,6 @@
       }
     };
 
-    // Modal close
     const modal = $('nftModal');
     const closeBtn = $('modalCloseBtn');
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
@@ -296,13 +329,47 @@
     });
   }
 
-  // ===== Profile =====
-  function renderProfile(user) {
-    if (!user) return;
-    setText('profileName', user.username ? '@' + user.username : (user.first_name || 'Пользователь'));
-    setText('profileUsername', user.username || '—');
-    setText('profileId', user.user_id || '—');
-    setText('balUsdt', (Number(user.balance) || 0).toFixed(2));
+  // ===== Requests =====
+  function requestBalance() {
+    try { tgSend(ACTION.GET_BALANCE); } catch {}
+  }
+  function requestMyNfts() {
+    try { tgSend(ACTION.GET_MY_NFTS); } catch {}
+  }
+  function requestTransactions() {
+    try { tgSend(ACTION.GET_MY_TX); } catch {}
+  }
+  function requestMarket() {
+    try { tgSend(ACTION.GET_MARKET); } catch {}
+  }
+
+  // ===== Backend message handler =====
+  function handleBackendMessage(msg) {
+    const action = msg?.action || msg?.type || null;
+
+    if (action === ACTION.GET_BALANCE) {
+      const bal = msg?.balance ?? msg?.usdt ?? 0;
+      setText('balUsdt', (Number(bal) || 0).toFixed(2));
+      return;
+    }
+    if (action === ACTION.GET_MARKET) {
+      window._buyUI?.renderMarket(msg?.items || []);
+      return;
+    }
+    if (action === ACTION.GET_MY_NFTS) {
+      const items = msg?.items || [];
+      window._sellUI?.renderInventory(items);
+      renderProfileInventory(items);
+      return;
+    }
+    if (action === ACTION.GET_MY_TX || action === 'get_transactions') {
+      renderTx(msg?.items || []);
+      return;
+    }
+    if (action === 'accept_rules') {
+      setScreen('main');
+      return;
+    }
   }
 
   function renderProfileInventory(items) {
@@ -318,7 +385,7 @@
       b.className = 'list-item';
       b.innerHTML = `
         <div class="list-item-media">
-          <img src="${escapeHtml(nft.image_url || '')}" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23333%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%23888%22 font-size=%2230%22>NFT</text></svg>'">
+          <img src="${escapeHtml(nft.image_url || '')}" alt="" onerror="this.style.display='none'">
         </div>
         <div class="list-item-body">
           <div class="list-item-title">${escapeHtml(nft.name || 'NFT')}</div>
@@ -343,59 +410,12 @@
       const amount = Number(tx.amount) || 0;
       const sign = amount >= 0 ? '+' : '';
       row.innerHTML = `
-        <div class="tx-type">${escapeHtml(tx.type || tx.action || '—')}</div>
+        <div class="tx-type">${escapeHtml(tx.type || '—')}</div>
         <div class="tx-amount">${sign}${amount.toFixed(2)} ${escapeHtml(tx.currency || 'USDT')}</div>
         <div class="tx-detail">${escapeHtml(tx.details || tx.created_at || '')}</div>
       `;
       list.appendChild(row);
     });
-  }
-
-  // ===== Requests =====
-  function requestBalance() {
-    try { tgSend(ACTION.GET_BALANCE); } catch {}
-  }
-  function requestMyNfts() {
-    try { tgSend(ACTION.GET_MY_NFTS); } catch {}
-  }
-  function requestTransactions() {
-    try { tgSend(ACTION.GET_MY_TX); } catch {}
-  }
-  function requestMarket() {
-    try { tgSend(ACTION.GET_MARKET); } catch {}
-  }
-
-  // ===== Backend message handler =====
-  function handleBackendMessage(msg) {
-    const action = msg?.action || msg?.type || null;
-
-    if (action === ACTION.GET_BALANCE) {
-      const bal = msg?.balance ?? msg?.usdt ?? msg?.usdt_balance ?? 0;
-      setText('balUsdt', (Number(bal) || 0).toFixed(2));
-      renderProfile(msg);
-      return;
-    }
-    if (action === ACTION.GET_MARKET) {
-      const items = msg?.items || msg?.listings || [];
-      window._buyUI?.renderMarket(items);
-      return;
-    }
-    if (action === ACTION.GET_MY_NFTS) {
-      const items = msg?.items || msg?.nfts || [];
-      window._sellUI?.renderInventory(items);
-      renderProfileInventory(items);
-      return;
-    }
-    if (action === ACTION.GET_MY_TX || action === 'get_transactions') {
-      const items = msg?.items || msg?.transactions || [];
-      renderTx(items);
-      return;
-    }
-    // Accept rules confirmation
-    if (action === 'accept_rules') {
-      setScreen('main');
-      return;
-    }
   }
 
   // ===== Telegram WebApp handlers =====
@@ -406,23 +426,84 @@
     try {
       app.onEvent('webapp_data', (event) => {
         if (!event?.data) return;
-        try {
-          const parsed = JSON.parse(event.data);
-          handleBackendMessage(parsed);
-        } catch {}
+        try { handleBackendMessage(JSON.parse(event.data)); } catch {}
       });
     } catch {}
+  }
+
+  // ===== Background particles =====
+  function initParticles() {
+    const canvas = document.getElementById('bgCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let w, h, particles;
+
+    function resize() {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+    }
+
+    function createParticles() {
+      particles = [];
+      const count = Math.floor((w * h) / 15000);
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          r: Math.random() * 2 + 0.5,
+          dx: (Math.random() - 0.5) * 0.4,
+          dy: (Math.random() - 0.5) * 0.4,
+          o: Math.random() * 0.5 + 0.1
+        });
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, w, h);
+      particles.forEach(p => {
+        p.x += p.dx;
+        p.y += p.dy;
+        if (p.x < 0) p.x = w;
+        if (p.x > w) p.x = 0;
+        if (p.y < 0) p.y = h;
+        if (p.y > h) p.y = 0;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0, 136, 204, ${p.o})`;
+        ctx.fill();
+      });
+      requestAnimationFrame(draw);
+    }
+
+    resize();
+    createParticles();
+    draw();
+    window.addEventListener('resize', () => { resize(); createParticles(); });
   }
 
   // ===== Init =====
   document.addEventListener('DOMContentLoaded', () => {
     attachWebAppHandlers();
+
+    // Expand Telegram WebApp
+    const app = tgApp();
+    if (app) {
+      app.expand();
+      app.ready();
+    }
+
+    // Load user data from Telegram IMMEDIATELY
+    renderProfileFromTelegram();
+
     initRules();
     initMenu();
     initProfileTabs();
     initSell();
     initBuy();
     initWithdraw();
+    initParticles();
+
     setScreen('rules');
   });
 })();
