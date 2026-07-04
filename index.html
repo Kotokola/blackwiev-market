@@ -22,7 +22,7 @@
 
 <main class="app">
 
-    <!-- ===== ПРАВИЛА ===== -->
+    <!-- ПРАВИЛА -->
     <section class="scr act" id="scrRules">
         <div class="box">
             <div class="ico"><i class="fa-solid fa-scroll"></i></div>
@@ -36,7 +36,7 @@
         </div>
     </section>
 
-    <!-- ===== МЕНЮ ===== -->
+    <!-- МЕНЮ -->
     <section class="scr" id="scrMenu">
         <div class="box">
             <h2>Главное меню</h2>
@@ -49,7 +49,7 @@
         </div>
     </section>
 
-    <!-- ===== ПРОДАТЬ ===== -->
+    <!-- ПРОДАТЬ -->
     <section class="scr" id="scrSell">
         <div class="box">
             <div class="hd"><h2>Продать NFT</h2><button class="bk" data-back="menu"><i class="fa-solid fa-arrow-left"></i></button></div>
@@ -62,7 +62,14 @@
                 <div>
                     <h3 class="st">Продажа</h3>
                     <div class="fld"><label>NFT</label><div class="sn" id="sellS">Не выбран</div></div>
-                    <div class="fld"><label>Цена (USDT)</label><input type="number" min="0.1" step="0.01" id="sellP" placeholder="10"></div>
+                    <div class="fld"><label>Валюта</label>
+                        <select id="sellCur">
+                            <option value="USDT">USDT</option>
+                            <option value="STARS">Telegram Stars</option>
+                            <option value="TON">TON</option>
+                        </select>
+                    </div>
+                    <div class="fld"><label>Цена</label><input type="number" min="0.1" step="0.01" id="sellP" placeholder="10"></div>
                     <button class="btn" id="btnSell" disabled>Выставить</button>
                     <div class="ms" id="msgSell"></div>
                 </div>
@@ -71,7 +78,7 @@
         </div>
     </section>
 
-    <!-- ===== КУПИТЬ ===== -->
+    <!-- КУПИТЬ -->
     <section class="scr" id="scrBuy">
         <div class="box">
             <div class="hd"><h2>Магазин</h2><button class="bk" data-back="menu"><i class="fa-solid fa-arrow-left"></i></button></div>
@@ -81,7 +88,7 @@
         </div>
     </section>
 
-    <!-- ===== ПРОФИЛЬ ===== -->
+    <!-- ПРОФИЛЬ -->
     <section class="scr" id="scrProfile">
         <div class="box">
             <div class="hd"><h2>Профиль</h2><button class="bk" data-back="menu"><i class="fa-solid fa-arrow-left"></i></button></div>
@@ -107,8 +114,17 @@
             </div>
             <div class="tc" data-tab="wd">
                 <h3 class="st">Вывод средств</h3>
-                <div class="fld"><label>Сумма (USDT)</label><input type="number" min="1" id="wdA" placeholder="Минимум 1"></div>
-                <div class="fld"><label>Кошелёк</label><input type="text" id="wdW" placeholder="Адрес"></div>
+                <p class="dim">Комиссия 5%. Минимум: 1 USDT / 50 Stars / 0.5 TON</p>
+                <div class="fld"><label>Валюта</label>
+                    <select id="wdCur">
+                        <option value="USDT">USDT</option>
+                        <option value="STARS">Telegram Stars</option>
+                        <option value="TON">TON</option>
+                    </select>
+                </div>
+                <div class="fld"><label>Сумма</label><input type="number" min="0" step="0.01" id="wdA" placeholder="100"></div>
+                <div class="fld"><label>@username для вывода</label><input type="text" id="wdW" placeholder="@username"></div>
+                <div class="wdcalc" id="wdCalc">Получите: —</div>
                 <button class="btn" id="btnWd">Создать заявку</button>
                 <div class="ms" id="msgWd"></div>
             </div>
@@ -126,7 +142,7 @@
 <!-- Модалка NFT -->
 <div class="ov" id="ov">
     <div class="modal">
-        <button class="mc" id="mCl"><i class="fa-solid fa-xmark"></i></button>
+        <button class="mcl" id="mCl"><i class="fa-solid fa-xmark"></i></button>
         <img class="mi" id="mI" src="" alt="">
         <div class="mbg" id="mR">—</div>
         <h2 id="mT">—</h2>
