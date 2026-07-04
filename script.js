@@ -2,7 +2,7 @@
   const $ = s => document.getElementById(s);
   const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   const fp = (v,c) => (Number(v)||0).toFixed(2)+' '+(c||'');
-  const FEE = 0.05; // 5% комиссия
+  const FEE = 0.05;
 
   const tg = () => { try { return window.Telegram?.WebApp || null; } catch { return null; } };
   function send(d) { const a=tg(); if(!a)return; try{a.sendData(typeof d==='string'?d:JSON.stringify(d));}catch{} }
@@ -14,39 +14,35 @@
   }
   function msg(id,t,k) { const e=$(id); if(!e)return; e.textContent=t||''; e.className='ms'; if(k)e.classList.add(k); }
 
-  // === Parse user from initData (works always, even via menu button) ===
+  // === User data — parse from initData (works via menu button) ===
   function parseUser() {
     const app = tg();
     if (!app) return null;
-
-    // Method 1: try initDataUnsafe
-    if (app.initDataUnsafe && app.initDataUnsafe.user) {
-      return app.initDataUnsafe.user;
-    }
-
-    // Method 2: parse initData string
-    if (app.initData) {
-      try {
-        const params = new URLSearchParams(app.initData);
-        const userStr = params.get('user');
-        if (userStr) return JSON.parse(userStr);
-      } catch {}
-    }
-
+    // Method 1: initDataUnsafe
+    try { if (app.initDataUnsafe && app.initDataUnsafe.user) return app.initDataUnsafe.user; } catch {}
+    // Method 2: parse initData URL params
+    try {
+      if (app.initData) {
+        const p = new URLSearchParams(app.initData);
+        const u = p.get('user');
+        if (u) return JSON.parse(u);
+      }
+    } catch {}
     return null;
   }
 
   let idVisible = false;
+  let sellNft = null;
+  let sellCurrency = null;
 
   function loadProfile() {
     const u = parseUser();
+    const av = $('av');
     if (u) {
       const name = [u.first_name, u.last_name].filter(Boolean).join(' ');
       $('pNm').textContent = name || 'Пользователь';
       $('pUs').textContent = u.username ? '@'+u.username : 'Без username';
       $('pId').textContent = String(u.id);
-
-      const av = $('av');
       if (u.photo_url) {
         av.innerHTML = '<img src="'+esc(u.photo_url)+'" alt="">';
       } else {
@@ -54,32 +50,24 @@
       }
     } else {
       $('pNm').textContent = 'Пользователь';
-      $('pUs').textContent = '—';
+      $('pUs').textContent = 'Откройте через Telegram';
       $('pId').textContent = '—';
-      $('av').textContent = '?';
+      av.textContent = '?';
     }
   }
 
   function toggleId() {
-    const el = $('pId');
-    const btn = $('btnToggleId');
     idVisible = !idVisible;
-    el.classList.toggle('show', idVisible);
-    btn.textContent = idVisible ? 'Скрыть' : 'Показать';
+    $('pId').classList.toggle('show', idVisible);
+    $('btnToggleId').textContent = idVisible ? 'Скрыть' : 'Показать';
   }
 
   // === Init ===
   document.addEventListener('DOMContentLoaded', () => {
     const app = tg();
-    if (app) {
-      try { app.expand(); } catch {}
-      try { app.ready(); } catch {}
-    }
+    if (app) { try{app.expand();}catch{} try{app.ready();}catch{} }
 
-    // Small delay to ensure initData is ready
-    setTimeout(() => {
-      loadProfile();
-    }, 100);
+    setTimeout(loadProfile, 200);
 
     initBg();
     initRules();
@@ -90,7 +78,6 @@
     initWithdraw();
 
     $('btnToggleId').onclick = toggleId;
-
     show('scrRules');
   });
 
@@ -113,7 +100,7 @@
       b.onclick=()=>{
         const g=b.dataset.go;
         show('scr'+g[0].toUpperCase()+g.slice(1));
-        if(g==='sell') send({action:'get_my_nfts'});
+        if(g==='sell'){resetSell();send({action:'get_my_nfts'});}
         if(g==='buy') send({action:'get_market'});
         if(g==='profile'){loadProfile();send({action:'get_balance'});send({action:'get_my_nfts'});}
       };
@@ -139,15 +126,39 @@
     });
   }
 
-  // === Sell ===
-  let sellNft=null;
+  // === Sell (step by step) ===
+  function resetSell() {
+    sellNft = null;
+    sellCurrency = null;
+    $('step1').classList.remove('done');
+    $('step2').classList.add('locked');
+    $('step3').classList.add('locked');
+    $('sellS').textContent = '—';
+    $('sellP').value = '';
+    document.querySelectorAll('.curbtn').forEach(b=>b.classList.remove('sel'));
+    msg('msgSell','','');
+  }
+
   function initSell() {
+    // Currency selection
+    document.querySelectorAll('.curbtn').forEach(btn=>{
+      btn.onclick=()=>{
+        document.querySelectorAll('.curbtn').forEach(b=>b.classList.remove('sel'));
+        btn.classList.add('sel');
+        sellCurrency = btn.dataset.cur;
+        $('step3').classList.remove('locked');
+        if(sellNft) $('sellS').textContent = sellNft.name + ' ('+sellCurrency+')';
+      };
+    });
+
+    // Final submit
     $('btnSell').onclick=()=>{
-      if(!sellNft)return;
+      if(!sellNft||!sellCurrency){msg('msgSell','Выберите NFT и валюту','wn');return;}
       const p=Number($('sellP').value);
-      if(!p||p<=0){msg('msgSell','Введите сумму','wn');return;}
-      send({action:'list_nft',nft_id:sellNft.id,price:p,currency:$('sellCur').value});
-      msg('msgSell','Отправлено!','ok');
+      if(!p||p<=0){msg('msgSell','Введите цену','wn');return;}
+      send({action:'list_nft',nft_id:sellNft.id,price:p,currency:sellCurrency});
+      msg('msgSell','Выставлено на продажу!','ok');
+      setTimeout(resetSell, 2000);
     };
   }
 
@@ -164,8 +175,9 @@
         el.querySelectorAll('.li').forEach(x=>x.classList.remove('sel'));
         b.classList.add('sel');
         sellNft=n;
-        $('sellS').textContent=n.name||'NFT';
-        $('btnSell').disabled=false;
+        $('step1').classList.add('done');
+        $('step2').classList.remove('locked');
+        msg('msgSell','','');
       };
       el.appendChild(b);
     });
@@ -240,22 +252,23 @@
     });
   }
 
+  // === Balance (3 currencies) ===
+  function renderBalance(m) {
+    $('bUsdt').textContent = (Number(m.balance)||0).toFixed(2);
+    $('bStars').textContent = (Number(m.stars)||0).toFixed(0);
+    $('bTon').textContent = (Number(m.ton)||0).toFixed(2);
+  }
+
   // === Withdraw ===
   function initWithdraw() {
-    // Live calculator
-    const amtInput = $('wdA');
-    const curSelect = $('wdCur');
-    const calcEl = $('wdCalc');
-
-    function updateCalc() {
-      const a = Number(amtInput.value || 0);
-      const cur = curSelect.value;
-      if (a <= 0) { calcEl.textContent = 'Получите: —'; return; }
-      const after = a * (1 - FEE);
-      calcEl.textContent = 'Получите: ' + after.toFixed(2) + ' ' + cur;
+    const amtInput=$('wdA'), curSelect=$('wdCur'), calcEl=$('wdCalc');
+    function updateCalc(){
+      const a=Number(amtInput.value||0), cur=curSelect.value;
+      if(a<=0){calcEl.textContent='Получите: —';return;}
+      calcEl.textContent='Получите: '+(a*(1-FEE)).toFixed(2)+' '+cur;
     }
-    amtInput.oninput = updateCalc;
-    curSelect.onchange = updateCalc;
+    amtInput.oninput=updateCalc;
+    curSelect.onchange=updateCalc;
 
     $('btnWd').onclick=()=>{
       const a=Number($('wdA').value||0);
@@ -263,7 +276,7 @@
       const cur=$('wdCur').value;
       if(a<=0){msg('msgWd','Введите сумму','wn');return;}
       if(!w){msg('msgWd','Укажите @username для вывода','wn');return;}
-      const after = a * (1 - FEE);
+      const after=a*(1-FEE);
       send({action:'create_withdraw',amount:a,currency:cur,wallet_address:w});
       msg('msgWd','Заявка создана! К вам придет '+after.toFixed(2)+' '+cur+' на @'+w.replace('@','')+'. Менеджер @ggyyert свяжется с вами.','ok');
     };
@@ -272,7 +285,7 @@
   // === Backend messages ===
   function onData(m) {
     const a=m?.action;
-    if(a==='get_balance') { $('balUsdt').textContent=(Number(m.balance)||0).toFixed(2); }
+    if(a==='get_balance') renderBalance(m);
     if(a==='get_market') renderMarket(m.items||[]);
     if(a==='get_my_nfts') renderProfInv(m.items||[]);
     if(a==='get_transactions') renderTx(m.items||[]);
