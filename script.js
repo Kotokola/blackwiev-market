@@ -15,7 +15,7 @@
   function msg(id,t,k) { const e=$(id); if(!e)return; e.textContent=t||''; e.className='ms'; if(k)e.classList.add(k); }
 
   // === User data ===
-  let botUserData = null; // from bot response (fallback)
+  let botUserData = null;
   let balances = {usdt:0, stars:0, ton:0};
   let idVisible = false;
   let sellNft = null;
@@ -30,6 +30,16 @@
         const p = new URLSearchParams(app.initData);
         const u = p.get('user');
         if (u) return JSON.parse(u);
+      }
+    } catch {}
+    // Fallback: URL parameters from bot (uid, un, fn)
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const uid = urlParams.get('uid');
+      const un = urlParams.get('un');
+      const fn = urlParams.get('fn');
+      if (uid) {
+        return {id: Number(uid), user_id: Number(uid), username: un||'', first_name: fn||''};
       }
     } catch {}
     return null;
@@ -265,14 +275,9 @@
     $('bStars').textContent = balances.stars.toFixed(0);
     $('bTon').textContent = balances.ton.toFixed(2);
 
-    // Also use bot data as fallback for profile
+    // Fallback: use bot data for profile if parseUser failed
     if (m.user_id && !parseUser()) {
-      botUserData = {
-        id: m.user_id,
-        user_id: m.user_id,
-        first_name: m.first_name || '',
-        username: m.username || ''
-      };
+      botUserData = {id:m.user_id, user_id:m.user_id, first_name:m.first_name||'', username:m.username||''};
       loadProfile();
     }
   }
