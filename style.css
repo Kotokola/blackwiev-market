@@ -57,8 +57,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--tx);min-hei
 .fld{margin-bottom:12px}
 .fld label{display:block;font-size:.78rem;color:var(--tm);margin-bottom:5px;font-weight:500}
 .fld input,.fld select{width:100%;padding:11px;background:var(--ch);border:1px solid var(--br);border-radius:10px;color:var(--tx);font-size:.92rem;outline:none;transition:border .2s}
+.fld select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237777aa' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.fld select option{background:var(--ch);color:var(--tx)}
 .fld input:focus{border-color:var(--p)}
 .fld input::placeholder{color:#444}
+.wdcalc{padding:10px;background:var(--ch);border:1px solid var(--br);border-radius:10px;font-size:.85rem;color:var(--ok);font-weight:600;margin-bottom:12px;text-align:center}
 .sn{padding:11px;background:var(--ch);border:1px solid var(--br);border-radius:10px;font-size:.88rem;color:var(--tm)}
 .ptop{display:flex;align-items:center;gap:12px;margin-bottom:14px}
 .av{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--p),#006699);display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:#fff;flex-shrink:0;overflow:hidden}
