@@ -13,7 +13,6 @@ let idVisible=false,sellNft=null,sellCurrency=null;
 function show(id){document.querySelectorAll('.scr').forEach(s=>s.classList.remove('act'));const el=$(id);if(el)el.classList.add('act');window.scrollTo(0,0)}
 function msg(id,t,k){const e=$(id);if(!e)return;e.textContent=t||'';e.className='ms';if(k)e.classList.add(k)}
 
-// ===== PROFILE =====
 function fillProfile(name,username,id,photoUrl){
   const av=$('av');
   $('pNm').textContent=name||'Пользователь';
@@ -24,40 +23,39 @@ function fillProfile(name,username,id,photoUrl){
 }
 
 function loadProfile(){
-  // Try Telegram data first
+  
   const a=tgApp();
   if(a){
-    // initDataUnsafe.user
+    
     try{if(a.initDataUnsafe&&a.initDataUnsafe.user){
       const u=a.initDataUnsafe.user;
       fillProfile([u.first_name,u.last_name].filter(Boolean).join(' '),u.username,u.id,u.photo_url);
       return;
     }}catch{}
-    // initData string
+    
     try{if(a.initData){
       const p=new URLSearchParams(a.initData);
       const raw=p.get('user');
       if(raw){const u=JSON.parse(raw);fillProfile([u.first_name,u.last_name].filter(Boolean).join(' '),u.username,u.id,u.photo_url);return;}
     }}catch{}
   }
-  // URL params from bot
+  
   try{
     const p=new URLSearchParams(window.location.search);
     const uid=p.get('uid');
     if(uid){fillProfile(p.get('fn')||'Пользователь',p.get('un')||'',Number(uid));return;}
   }catch{}
-  // Nothing available — show placeholder, bot response will fill it
+  
   fillProfile('Пользователь','',0,null);
   tgSend({action:'get_balance'});
 }
 
 function toggleId(){idVisible=!idVisible;$('pId').classList.toggle('show',idVisible);$('btnToggleId').textContent=idVisible?'Скрыть':'Показать'}
 
-// ===== INIT =====
 document.addEventListener('DOMContentLoaded',()=>{
   const a=tgApp();
   if(a){try{a.expand()}catch{}try{a.ready()}catch{}}
-  // Multiple attempts to catch Telegram SDK initialization
+  
   loadProfile();
   setTimeout(loadProfile,300);
   setTimeout(loadProfile,1000);
@@ -67,7 +65,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   show('scrRules');
 });
 
-// ===== Rules =====
 function initRules(){
   const cb=$('cbR'),btn=$('btnR');
   btn.disabled=!cb.checked;
@@ -76,7 +73,6 @@ function initRules(){
   try{if(localStorage.getItem('bb_r')==='1')show('scrMenu')}catch{}
 }
 
-// ===== Menu =====
 function initMenu(){
   document.querySelectorAll('[data-go]').forEach(b=>{
     b.onclick=()=>{
@@ -92,7 +88,6 @@ function initMenu(){
   });
 }
 
-// ===== Tabs =====
 function initTabs(){
   document.querySelectorAll('.tab').forEach(t=>{
     t.onclick=()=>{
@@ -108,7 +103,6 @@ function initTabs(){
   });
 }
 
-// ===== Sell =====
 function resetSell(){
   sellNft=null;sellCurrency=null;
   if($('step1'))$('step1').classList.remove('done');
@@ -148,7 +142,6 @@ function renderSell(items){
   });
 }
 
-// ===== Buy =====
 let buyNft=null;
 function initBuy(){
   if($('btnBuy'))$('btnBuy').onclick=()=>{
@@ -195,19 +188,17 @@ function renderTx(items){
   });
 }
 
-// ===== Balance — ALWAYS updates profile from bot data =====
 function renderBalance(m){
   balances.usdt=Number(m.balance)||0;balances.stars=Number(m.stars)||0;balances.ton=Number(m.ton)||0;
   if($('bUsdt'))$('bUsdt').textContent=balances.usdt.toFixed(2);
   if($('bStars'))$('bStars').textContent=balances.stars.toFixed(0);
   if($('bTon'))$('bTon').textContent=balances.ton.toFixed(2);
-  // Bot always sends user_id/first_name/username — use them
+  
   if(m.user_id){
     fillProfile(m.first_name||'Пользователь',m.username||'',m.user_id,null);
   }
 }
 
-// ===== Withdraw =====
 function initWithdraw(){
   const ai=$('wdA'),cs=$('wdCur'),cl=$('wdCalc');
   if(!ai||!cs||!cl)return;
@@ -223,11 +214,10 @@ function initWithdraw(){
     if(cur==='STARS'&&a>balances.stars){msg('msgWd','Недостаточно. Баланс: '+balances.stars+' Stars','wn');return}
     if(cur==='TON'&&a>balances.ton){msg('msgWd','Недостаточно. Баланс: '+balances.ton.toFixed(2)+' TON','wn');return}
     tgSend({action:'create_withdraw',amount:a,currency:cur,wallet_address:w});
-    msg('msgWd','Заявка! К вам придет '+(a*(1-FEE)).toFixed(2)+' '+cur+' на @'+w.replace('@','')+'. @ggyyert свяжется.','ok');
+    msg('msgWd','Заявка! К вам придет '+(a*(1-FEE)).toFixed(2)+' '+cur+' на @'+w.replace('@','')+'. @kotokola свяжется.','ok');
   };
 }
 
-// ===== Backend =====
 function onData(m){
   const a=m?.action;
   if(a==='get_balance')renderBalance(m);
@@ -239,7 +229,6 @@ function onData(m){
 const app=tgApp();
 if(app){try{app.onEvent('webapp_data',e=>{try{onData(JSON.parse(e.data))}catch{}})}catch{}}
 
-// ===== BG =====
 function initBg(){
   const c=$('bgCanvas');if(!c)return;const ctx=c.getContext('2d');let w,h,pts=[];
   function r(){w=c.width=innerWidth;h=c.height=innerHeight}
