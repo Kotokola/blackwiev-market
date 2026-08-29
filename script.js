@@ -4,6 +4,30 @@ const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>
 const fp=(v,c)=>(Number(v)||0).toFixed(2)+' '+(c||'');
 const FEE=0.05;
 
+function fmtAttrs(a){
+  if(!a||typeof a!=='object')return '';
+  const parts=[];
+  if(a.model)parts.push('Model: '+a.model);
+  if(a.backdrop)parts.push('Backdrop: '+a.backdrop);
+  if(a.symbol)parts.push('Symbol: '+a.symbol);
+  if(a.pattern)parts.push('Pattern: '+a.pattern);
+  if(a.background)parts.push('Background: '+a.background);
+  if(a.number)parts.push('#'+a.number);
+  return parts.join(' • ');
+}
+function fmtAttrsHtml(a){
+  if(!a||typeof a!=='object')return '';
+  let h='';
+  if(a.model)h+='<div class="mcr"><span class="mcl">Model:</span><span class="mcv">'+esc(a.model)+'</span></div>';
+  if(a.backdrop)h+='<div class="mcr"><span class="mcl">Backdrop:</span><span class="mcv">'+esc(a.backdrop)+'</span></div>';
+  if(a.symbol)h+='<div class="mcr"><span class="mcl">Symbol:</span><span class="mcv">'+esc(a.symbol)+'</span></div>';
+  if(a.pattern)h+='<div class="mcr"><span class="mcl">Pattern:</span><span class="mcv">'+esc(a.pattern)+'</span></div>';
+  if(a.background)h+='<div class="mcr"><span class="mcl">Background:</span><span class="mcv">'+esc(a.background)+'</span></div>';
+  if(a.number)h+='<div class="mcr"><span class="mcl">Number:</span><span class="mcv">#'+esc(a.number)+'</span></div>';
+  return h;
+}
+
+
 function tgApp(){try{return window.Telegram?.WebApp||null}catch{return null}}
 function tgSend(d){const a=tgApp();if(!a)return;try{a.sendData(typeof d==='string'?d:JSON.stringify(d))}catch{}}
 
@@ -135,7 +159,8 @@ function renderSell(items){
   el.innerHTML='';em.style.display=items.length?'none':'block';
   items.forEach(n=>{
     const b=document.createElement('button');b.className='li';b.type='button';
-    b.innerHTML='<div class="lii"><img src="'+esc(n.image_url||'')+'" onerror="this.style.display=\'none\'"></div><div class="lib"><div class="lin">'+esc(n.name||'NFT')+'</div><div class="lis">'+esc(n.rarity||'')+'</div></div>';
+    const attrsSell = n.attributes||{}; const subSell = fmtAttrs(attrsSell) || esc(n.rarity||'');
+    b.innerHTML='<div class="lii"><img src="'+esc(n.image_url||'')+'" onerror="this.style.display=\'none\'"></div><div class="lib"><div class="lin">'+esc(n.name||'NFT')+ (attrsSell.number ? ' #'+esc(attrsSell.number):'') +'</div><div class="lis">'+esc(subSell)+'</div></div>';
     b.onclick=()=>{el.querySelectorAll('.li').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');sellNft=n;
       if($('step1'))$('step1').classList.add('done');if($('step2'))$('step2').classList.remove('locked');msg('msgSell','','')};
     el.appendChild(b);
@@ -157,10 +182,27 @@ function renderMarket(items){
   el.innerHTML='';em.style.display=items.length?'none':'block';
   items.forEach(n=>{
     const c=document.createElement('button');c.className='mc';c.type='button';
-    c.innerHTML='<div class="mci"><img src="'+esc(n.image_url||'')+'" onerror="this.style.display=\'none\'"></div><div class="mcb"><div class="mcn">'+esc(n.name||'NFT')+'</div><div class="mcr"><span class="mcl">Цена:</span><span class="mcv">'+fp(n.price,n.currency)+'</span></div><div class="mcr"><span class="mcl">Продавец:</span><span class="mcv">'+esc(n.seller_name||'')+'</span></div></div>';
+        const ma=n.attributes||{}; const maTxt=fmtAttrs(ma);
+    c.innerHTML='<div class="mci"><img src="'+esc(n.image_url||'')+'" onerror="this.style.display=\'none\'"></div><div class="mcb"><div class="mcn">'+esc(n.name||'NFT')+ (ma.number ? ' #'+esc(ma.number):'') +'</div>' + (maTxt ? '<div class="mcr"><span class="mcl">Attrs:</span><span class="mcv">'+esc(maTxt)+'</span></div>':'') + '<div class="mcr"><span class="mcl">Цена:</span><span class="mcv">'+fp(n.price,n.currency)+'</span></div><div class="mcr"><span class="mcl">Продавец:</span><span class="mcv">'+esc(n.seller_name||'')+'</span></div></div>';
     c.onclick=()=>{buyNft=n;$('mI').src=n.image_url||'';$('mT').textContent=n.name||'NFT';
       $('mP').textContent=fp(n.price,n.currency);$('mS').textContent=n.seller_name||'';
-      $('mR').textContent=(n.rarity||'COMMON').toUpperCase();$('mRT').textContent=n.rarity||'common';
+      // rarity removed, show attributes
+      const ovA=n.attributes||{};
+      $('mR').textContent = (ovA.model || n.name || 'NFT').toUpperCase();
+      // fill attributes block
+      let attrHtml = fmtAttrsHtml(ovA);
+      if(!attrHtml && n.rarity) attrHtml = '<div class="mcr"><span class="mcl">Редкость:</span><span class="mcv">'+esc(n.rarity)+'</span></div>';
+      // insert or replace mRT/mLk area
+      const dtCont = document.querySelector('.mdt');
+      if(dtCont){
+        // keep link row, replace second row with attrs
+        let rows = dtCont.querySelectorAll('div');
+        // first row is link
+        // we will rebuild
+        dtCont.innerHTML = '<div><span>Ссылка</span><span id="mLk">'+esc(n.token_link||'')+'</span></div>' + attrHtml;
+      }
+      // keep mRT hidden but not needed
+      if($('mRT')) $('mRT').textContent = '';
       $('mLk').textContent=n.token_link||'—';$('msgBuy').textContent='';$('ov').classList.add('show');$('btnBuy').disabled=false};
     el.appendChild(c);
   });
@@ -171,7 +213,8 @@ function renderProfInv(items){
   el.innerHTML='';em.style.display=items.length?'none':'block';
   items.forEach(n=>{
     const d=document.createElement('div');d.className='li';
-    d.innerHTML='<div class="lii"><img src="'+esc(n.image_url||'')+'" onerror="this.style.display=\'none\'"></div><div class="lib"><div class="lin">'+esc(n.name||'NFT')+'</div><div class="lis">'+(n.is_listed?'В продаже':'Не в продаже')+'</div></div>';
+        const a=n.attributes||{}; const sub=fmtAttrs(a) || (n.is_listed?'On sale':'In inventory');
+    d.innerHTML='<div class="lii"><img src="'+esc(n.image_url||'')+'" onerror="this.style.display=\'none\'"></div><div class="lib"><div class="lin">'+esc(n.name||'NFT')+ (a.number ? ' #'+esc(a.number):'') +'</div><div class="lis">'+esc(sub)+'</div></div>';
     el.appendChild(d);
   });
   renderSell(items);
