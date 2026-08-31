@@ -30,9 +30,14 @@ async function fetchMyNfts(){
 }
 async function fetchMarket(){
   try{
-    const r = await fetch('./market.json?'+Date.now());
-    if(!r.ok) throw new Error('no market');
-    const items = await r.json();
+    const r = await fetch('./api.json?'+Date.now());
+    if(!r.ok) throw new Error('no api');
+    const data = await r.json();
+    const all = Object.values(data).flat();
+    const items = all.filter(x=>x.is_listed);
+    // need seller_name, fetch via is_listed items, seller is owner
+    // for market, seller_name is owner username, but api.json doesn't have it, use owner_id
+    for(const it of items){ if(!it.seller_name) it.seller_name = 'ID:'+it.owner_id; }
     renderMarket(items);
   }catch(e){
     try{ tgSend({action:'get_market'}); }catch(_){}

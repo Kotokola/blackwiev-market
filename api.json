@@ -17,7 +17,11 @@
         "issued_at": "2026-08-31T07:29:10",
         "issued_by": 8580891668
       },
-      "created_at": "2026-08-31 04:29:10"
+      "created_at": "2026-08-31 04:29:10",
+      "is_listed": true,
+      "price": 100.0,
+      "currency": "USDT",
+      "owner_id": 8580891668
     }
   ]
 }
