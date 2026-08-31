@@ -113,6 +113,7 @@
     /* ===== Rules ===== */
     const initRules = () => {
         const cb = $('#cbRules'), btn = $('#btnEnter');
+        if (!cb || !btn) { console.warn('Rules elements not found'); return; }
         btn.disabled = !cb.checked;
         cb.onchange = () => { btn.disabled = !cb.checked };
         btn.onclick = () => {
@@ -190,7 +191,7 @@
             btn.setAttribute('aria-checked', 'false');
             btn.dataset.cur = cur;
             const icons = { USDT: 'fa-dollar-sign', STARS: 'fa-star', TON: 'fa-cube' };
-            btn.innerHTML = `<i class="fa-solid ${icons[cur]}"></i><span>${cur}</span>`;
+            btn.innerHTML = '<i class="fa-solid ' + icons[cur] + '"></i><span>' + cur + '</span>';
             btn.onclick = () => selectCurrency(cur, btn);
             el.appendChild(btn);
         });
@@ -333,7 +334,7 @@
         $('#modalBadge').textContent = nft.is_listed ? 'НА ПРОДАЖЕ' : 'В ИНВЕНТАРЕ';
         $('#modalTitle').textContent = nft.name || 'NFT';
         $('#modalPrice').textContent = fmt(nft.price, nft.currency);
-        $('#modalSeller').innerHTML = `Продавец: <strong>${esc(nft.seller_name || 'ID:' + nft.owner_id)}</strong>`;
+        $('#modalSeller').innerHTML = 'Продавец: <strong>' + esc(nft.seller_name || 'ID:' + nft.owner_id) + '</strong>';
         $('#modalLink').href = nft.token_link || '#';
         $('#modalLink').textContent = nft.token_link ? 'Открыть в Telegram' : 'Ссылка недоступна';
         $('#modalAttrs').innerHTML = fmtAttrsHtml(attrs) || '<span class="attr-tag">Атрибутов нет</span>';
@@ -417,14 +418,6 @@
         $('#balStars').textContent = balances.stars.toFixed(0);
         $('#balTon').textContent = balances.ton.toFixed(2);
         if (m.user_id) fillProfile(m.first_name || 'Неизвестно', m.username || '', m.user_id, null);
-    };
-
-    /* ===== Withdraw Preview ===== */
-    const updateWithdrawPreview = () => {
-        const a = Number($('#wdAmt').value || 0), c = $('#wdCur').value;
-        const preview = $('#wdPreview');
-        if (a <= 0) { preview.innerHTML = 'К получению: <strong>—</strong>'; return; }
-        preview.innerHTML = 'К получению: <strong>' + (a * (1 - FEE)).toFixed(2) + '</strong> ' + c;
     };
 
     /* ===== Attribute Formatting ===== */
