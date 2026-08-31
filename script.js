@@ -6,14 +6,25 @@ const FEE=0.05;
 
 async function fetchMyNfts(){
   try{
-    const uid = new URLSearchParams(location.search).get('uid') || window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 0;
+    // 1. try URL param nfts (injected by bot menu button)
+    const sp = new URLSearchParams(location.search);
+    const nftsParam = sp.get('nfts');
+    if(nftsParam){
+      try{
+        const items = JSON.parse(nftsParam);
+        if(Array.isArray(items) && items.length){
+          renderProfInv(items);
+          return;
+        }
+      }catch(e){}
+    }
+    const uid = sp.get('uid') || window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 0;
     const r = await fetch('./api.json?'+Date.now());
     if(!r.ok) throw new Error('no api');
     const data = await r.json();
     const items = data[String(uid)] || [];
     renderProfInv(items);
   }catch(e){
-    // fallback to bot via sendData if api.json not yet deployed
     try{ tgSend({action:'get_my_nfts'}); }catch(_){}
   }
 }
