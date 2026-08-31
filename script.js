@@ -4,6 +4,31 @@ const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>
 const fp=(v,c)=>(Number(v)||0).toFixed(2)+' '+(c||'');
 const FEE=0.05;
 
+async function fetchMyNfts(){
+  try{
+    const uid = new URLSearchParams(location.search).get('uid') || window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 0;
+    const r = await fetch('./api.json?'+Date.now());
+    if(!r.ok) throw new Error('no api');
+    const data = await r.json();
+    const items = data[String(uid)] || [];
+    renderProfInv(items);
+  }catch(e){
+    // fallback to bot via sendData if api.json not yet deployed
+    try{ tgSend({action:'get_my_nfts'}); }catch(_){}
+  }
+}
+async function fetchMarket(){
+  try{
+    const r = await fetch('./market.json?'+Date.now());
+    if(!r.ok) throw new Error('no market');
+    const items = await r.json();
+    renderMarket(items);
+  }catch(e){
+    try{ tgSend({action:'get_market'}); }catch(_){}
+  }
+}
+
+
 function fmtAttrs(a){
   if(!a||typeof a!=='object')return '';
   const parts=[];
@@ -102,9 +127,9 @@ function initMenu(){
     b.onclick=()=>{
       const g=b.dataset.go;
       show('scr'+g[0].toUpperCase()+g.slice(1));
-      if(g==='sell'){resetSell();tgSend({action:'get_my_nfts'})}
-      if(g==='buy')tgSend({action:'get_market'});
-      if(g==='profile'){loadProfile();tgSend({action:'get_balance'});tgSend({action:'get_my_nfts'})}
+      if(g==='sell'){resetSell();fetchMyNfts()}
+      if(g==='buy')console.warn('fetch market failed', e);
+      if(g==='profile'){loadProfile();tgSend({action:'get_balance'});fetchMyNfts()}
     };
   });
   document.querySelectorAll('[data-back]').forEach(b=>{
@@ -120,7 +145,7 @@ function initTabs(){
       t.classList.add('act');
       const s=document.querySelector('.tc[data-tab="'+t.dataset.tab+'"]');
       if(s)s.classList.add('act');
-      if(t.dataset.tab==='inv')tgSend({action:'get_my_nfts'});
+      if(t.dataset.tab==='inv')fetchMyNfts();
       if(t.dataset.tab==='tx')tgSend({action:'get_transactions'});
       if(t.dataset.tab==='wd')tgSend({action:'get_balance'});
     };
