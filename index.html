@@ -2,155 +2,310 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0d1117">
     <title>BLACKWIEV NFT Market</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<canvas id="bgCanvas"></canvas>
+    <canvas id="bgCanvas"></canvas>
 
-<header class="hdr">
-    <div class="hdr-in">
-        <div class="hdr-logo"><i class="fa-solid fa-gem"></i> NFT Market</div>
-        <div class="hdr-bals">
-            <span class="bal-item"><i class="fa-solid fa-dollar-sign"></i> <span id="bUsdt">0</span></span>
-            <span class="bal-item"><i class="fa-solid fa-star"></i> <span id="bStars">0</span></span>
-            <span class="bal-item"><i class="fa-solid fa-coins"></i> <span id="bTon">0</span></span>
-        </div>
-    </div>
-</header>
-
-<main class="app">
-
-    <!-- Rules Screen -->
-    <section class="scr act" id="scrRules">
-        <div class="box">
-            <div class="ico"><i class="fa-solid fa-scroll"></i></div>
-            <h2>BLACKWIEV NFT Market</h2>
-            <p class="dim">Примите правила для доступа к маркету</p>
-            <a class="lnk" href="https://telegra.ph/PRAVILA-MAGAZINA-BLACKWIEV-NFT-MARKET-05-29" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Правила магазина</a>
-            <label class="chk"><input type="checkbox" id="cbR"><span>Я принимаю правила</span></label>
-            <button class="btn" id="btnR" disabled>Войти в маркет</button>
-        </div>
-    </section>
-
-    <!-- Main Menu -->
-    <section class="scr" id="scrMenu">
-        <div class="box">
-            <h2>Главное меню</h2>
-            <div class="m3">
-                <button class="mbtn" data-go="sell"><i class="fa-solid fa-hand-holding-dollar"></i><span>Продать</span></button>
-                <button class="mbtn" data-go="buy"><i class="fa-solid fa-bag-shopping"></i><span>Купить</span></button>
-                <button class="mbtn" data-go="profile"><i class="fa-solid fa-user"></i><span>Профиль</span></button>
+    <!-- App Header -->
+    <header class="app-header" role="banner">
+        <div class="header-inner">
+            <a href="#" class="logo" data-go="menu">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                    <path d="M2 17l10 5 10-5"/>
+                    <path d="M2 12l10 5 10-5"/>
+                </svg>
+                <span>BLACKWIEV</span>
+            </a>
+            <div class="header-balance">
+                <div class="balance-item" title="USDT">
+                    <i class="fa-solid fa-dollar-sign"></i>
+                    <span id="balUsdt">0.00</span>
+                </div>
+                <div class="balance-item" title="Stars">
+                    <i class="fa-solid fa-star"></i>
+                    <span id="balStars">0</span>
+                </div>
+                <div class="balance-item" title="TON">
+                    <i class="fa-solid fa-cube"></i>
+                    <span id="balTon">0.00</span>
+                </div>
             </div>
         </div>
-    </section>
+    </header>
 
-    <!-- Sell Screen -->
-    <section class="scr" id="scrSell">
-        <div class="box">
-            <div class="hd"><h2>Выставить NFT</h2><button class="bk" data-back="menu"><i class="fa-solid fa-arrow-left"></i></button></div>
+    <main class="app-main" role="main">
 
-            <div class="step" id="step1">
-                <h3 class="st"><span class="stepnum">1</span> Выберите NFT</h3>
-                <div id="sellL" class="vl"></div>
-                <div class="emp" id="sellE"><i class="fa-solid fa-box-open"></i>NFT нет в инвентаре</div>
+        <!-- RULES SCREEN -->
+        <section class="screen active" id="scrRules" aria-labelledby="rulesTitle">
+            <div class="card rules-card">
+                <div class="card-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <h1 id="rulesTitle">BLACKWIEV NFT Market</h1>
+                <p class="muted">Примите правила для доступа к маркету</p>
+                <a class="link-btn" href="https://telegra.ph/PRAVILA-MAGAZINA-BLACKWIEV-NFT-MARKET-05-29" target="_blank" rel="noopener">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Читать правила
+                </a>
+                <label class="checkbox-wrap">
+                    <input type="checkbox" id="cbRules">
+                    <span class="checkmark"></span>
+                    <span>Я прочитал и принимаю правила</span>
+                </label>
+                <button class="btn btn-primary btn-lg" id="btnEnter" disabled>
+                    <span>Войти в маркет</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- MAIN MENU -->
+        <section class="screen" id="scrMenu" aria-labelledby="menuTitle">
+            <div class="card menu-card">
+                <h2 id="menuTitle" class="sr-only">Главное меню</div>
+                <div class="menu-grid">
+                    <button class="menu-btn" data-go="sell" aria-label="Продать NFT">
+                        <div class="btn-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+                        <span>Продать</span>
+                    </button>
+                    <button class="menu-btn" data-go="buy" aria-label="Купить NFT">
+                        <div class="btn-icon"><i class="fa-solid fa-bag-shopping"></i></div>
+                        <span>Купить</span>
+                    </button>
+                    <button class="menu-btn" data-go="profile" aria-label="Профиль">
+                        <div class="btn-icon"><i class="fa-solid fa-user"></i></div>
+                        <span>Профиль</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SELL SCREEN -->
+        <section class="screen" id="scrSell" aria-labelledby="sellTitle">
+            <header class="screen-header">
+                <button class="btn-back" data-back="menu" aria-label="Назад"><i class="fa-solid fa-chevron-left"></i></button>
+                <h2 id="sellTitle">Выставить NFT</h2>
+            </header>
+
+            <div class="steps-indicator" role="progressbar" aria-valuenow="1" aria-valuemin="1" aria-valuemax="3">
+                <div class="step-dot active" data-step="1"><span>1</span></div>
+                <div class="step-line"></div>
+                <div class="step-dot" data-step="2"><span>2</span></div>
+                <div class="step-line"></div>
+                <div class="step-dot" data-step="3"><span>3</span></div>
             </div>
 
-            <div class="step locked" id="step2">
-                <h3 class="st"><span class="stepnum">2</span> Выберите валюту</h3>
-                <div class="curgrid">
-                    <button class="curbtn" data-cur="USDT"><i class="fa-solid fa-dollar-sign"></i>USDT</button>
-                    <button class="curbtn" data-cur="STARS"><i class="fa-solid fa-star"></i>Stars</button>
-                    <button class="curbtn" data-cur="TON"><i class="fa-solid fa-coins"></i>TON</button>
+            <div class="steps-container">
+                <!-- Step 1: Select NFT -->
+                <div class="step-panel active" data-step="1" role="tabpanel" aria-labelledby="step1Title">
+                    <h3 id="step1Title" class="step-title">Выберите NFT</h3>
+                    <div class="nft-grid" id="sellGrid" role="list" aria-label="Ваши NFT"></div>
+                    <div class="empty-state" id="sellEmpty" hidden>
+                        <i class="fa-solid fa-box-open"></i>
+                        <p>NFT в инвентаре нет</p>
+                    </div>
+                </div>
+
+                <!-- Step 2: Currency -->
+                <div class="step-panel" data-step="2" role="tabpanel" aria-labelledby="step2Title" hidden>
+                    <h3 id="step2Title" class="step-title">Выберите валюту</h3>
+                    <div class="currency-grid" role="radiogroup" aria-label="Валюта продажи">
+                        <button class="currency-btn" data-cur="USDT" role="radio" aria-checked="false">
+                            <i class="fa-solid fa-dollar-sign"></i>
+                            <span>USDT</span>
+                        </button>
+                        <button class="currency-btn" data-cur="STARS" role="radio" aria-checked="false">
+                            <i class="fa-solid fa-star"></i>
+                            <span>Stars</span>
+                        </button>
+                        <button class="currency-btn" data-cur="TON" role="radio" aria-checked="false">
+                            <i class="fa-solid fa-cube"></i>
+                            <span>TON</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Price -->
+                <div class="step-panel" data-step="3" role="tabpanel" aria-labelledby="step3Title" hidden>
+                    <h3 id="step3Title" class="step-title">Установите цену</h3>
+                    <div class="selected-nft" id="sellPreview" hidden>
+                        <img id="sellPreviewImg" src="" alt="">
+                        <div class="nft-meta">
+                            <span class="nft-name" id="sellPreviewName">—</span>
+                            <span class="nft-currency" id="sellPreviewCur">—</span>
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label for="sellPrice">Цена</label>
+                        <input type="number" id="sellPrice" min="0.01" step="0.01" placeholder="Например: 100" aria-describedby="priceHint">
+                        <span id="priceHint" class="hint">Минимум 0.01</span>
+                    </div>
+                    <div class="fee-info">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>Комиссия маркета: <strong>5%</strong> удерживается от суммы продажи</span>
+                    </div>
+                    <button class="btn btn-primary btn-lg" id="btnList" disabled>
+                        <span>Выставить на продажу</span>
+                        <i class="fa-solid fa-tag"></i>
+                    </button>
                 </div>
             </div>
 
-            <div class="step locked" id="step3">
-                <h3 class="st"><span class="stepnum">3</span> Установите цену</h3>
-                <div class="sel-nft" id="sellS">—</div>
-                <div class="fld"><label>Цена</label><input type="number" min="0.1" step="0.01" id="sellP" placeholder="Например: 10"></div>
-                <button class="btn" id="btnSell">Выставить на продажу</button>
+            <div class="msg" id="sellMsg" hidden></div>
+        </section>
+
+        <!-- MARKET / BUY SCREEN -->
+        <section class="screen" id="scrBuy" aria-labelledby="marketTitle">
+            <header class="screen-header">
+                <button class="btn-back" data-back="menu" aria-label="Назад"><i class="fa-solid fa-chevron-left"></i></button>
+                <h2 id="marketTitle">Маркет</h2>
+            </header>
+            <div class="market-filters">
+                <select id="sortSelect" aria-label="Сортировка">
+                    <option value="new">Новые</option>
+                    <option value="price-asc">Цена ↑</option>
+                    <option value="price-desc">Цена ↓</option>
+                </select>
+                <select id="curFilter" aria-label="Валюта">
+                    <option value="">Все валюты</option>
+                    <option value="USDT">USDT</option>
+                    <option value="STARS">Stars</option>
+                    <option value="TON">TON</option>
+                </select>
             </div>
+            <div class="market-grid" id="marketGrid" role="list" aria-label="NFT на продаже"></div>
+            <div class="empty-state" id="marketEmpty" hidden>
+                <i class="fa-solid fa-store"></i>
+                <p>Пока никто ничего не выставлял</p>
+            </div>
+        </section>
 
-            <div class="ms" id="msgSell"></div>
-        </div>
-    </section>
+        <!-- PROFILE SCREEN -->
+        <section class="screen" id="scrProfile" aria-labelledby="profileTitle">
+            <header class="screen-header">
+                <button class="btn-back" data-back="menu" aria-label="Назад"><i class="fa-solid fa-chevron-left"></i></button>
+                <h2 id="profileTitle">Профиль</h2>
+            </header>
 
-    <!-- Buy/Market Screen -->
-    <section class="scr" id="scrBuy">
-        <div class="box">
-            <div class="hd"><h2>Маркет</h2><button class="bk" data-back="menu"><i class="fa-solid fa-arrow-left"></i></button></div>
-            <div id="mktL" class="vl"></div>
-            <div class="emp" id="mktE"><i class="fa-solid fa-store"></i>Пусто</div>
-        </div>
-    </section>
-
-    <!-- Profile Screen -->
-    <section class="scr" id="scrProfile">
-        <div class="box">
-            <div class="hd"><h2>Профиль</h2><button class="bk" data-back="menu"><i class="fa-solid fa-arrow-left"></i></button></div>
-            <div class="ptop">
-                <div class="av" id="av"></div>
-                <div class="pinfo">
-                    <div class="pn" id="pNm">—</div>
-                    <div class="ps" id="pUs">—</div>
+            <div class="profile-header">
+                <div class="avatar" id="avatar"></div>
+                <div class="profile-info">
+                    <h3 id="profName">—</h3>
+                    <p id="profUser">—</p>
+                </div>
+                <div class="profile-id">
+                    <span>ID: <span id="profId">—</span></span>
+                    <button class="btn-icon" id="btnToggleId" aria-label="Скрыть/показать ID"><i class="fa-solid fa-eye-slash"></i></button>
                 </div>
             </div>
-            <div class="idrow">
-                <span class="idlbl">ID: <span class="idval" id="pId">—</span></span>
-                <button class="btntiny" id="btnToggleId">Скрыть</button>
-            </div>
-            <div class="tabs">
-                <button class="tab act" data-tab="inv">Инвентарь</button>
-                <button class="tab" data-tab="wd">Вывод</button>
-                <button class="tab" data-tab="tx">История</button>
-            </div>
-            <div class="tc act" data-tab="inv">
-                <div id="prInv" class="vl"></div>
-                <div class="emp" id="prInvE"><i class="fa-solid fa-box-open"></i>Инвентарь пуст</div>
-            </div>
-            <div class="tc" data-tab="wd">
-                <h3 class="st">Вывод средств</h3>
-                <p class="dim">Комиссия 5%</p>
-                <div class="fld"><label>Валюта</label>
-                    <select id="wdCur"><option value="USDT">USDT</option><option value="STARS">Telegram Stars</option><option value="TON">TON</option></select>
-                </div>
-                <div class="fld"><label>Сумма</label><input type="number" min="0" step="0.01" id="wdA" placeholder="100"></div>
-                <div class="fld"><label>@username или кошелёк</label><input type="text" id="wdW" placeholder="@username или адрес"></div>
-                <div class="wdcalc" id="wdCalc">К получению: —</div>
-                <button class="btn" id="btnWd">Запросить вывод</button>
-                <div class="ms" id="msgWd"></div>
-            </div>
-            <div class="tc" data-tab="tx">
-                <h3 class="st">История</h3>
-                <div id="txL" class="vl"></div>
-                <div class="emp" id="txE"><i class="fa-solid fa-clock-rotate-left"></i>Пусто</div>
-            </div>
-        </div>
-    </section>
 
-    <!-- Market Detail Overlay -->
-    <div class="ov" id="ov">
-        <div class="modal">
-            <button class="mcl" id="mCl"><i class="fa-solid fa-xmark"></i></button>
-            <img class="mi" id="mI" src="" alt="">
-            <div class="mbg" id="mBg"></div>
-            <h2 id="mT">—</h2>
-            <div class="mpr" id="mP">—</div>
-            <div class="msl" id="mS">—</div>
-            <div class="mdt">
-                <div><span>Ссылка</span><span id="mLk">—</span></div>
-                <div class="mattr" id="mAttr"></div>
+            <div class="tabs" role="tablist" aria-label="Разделы профиля">
+                <button class="tab active" role="tab" data-tab="inv" aria-selected="true">Инвентарь</button>
+                <button class="tab" role="tab" data-tab="wd" aria-selected="false">Вывод</button>
+                <button class="tab" role="tab" data-tab="tx" aria-selected="false">История</button>
             </div>
-            <button class="btn btnb" id="btnBuy" disabled>Купить</button>
-            <div class="ms" id="msgBuy"></div>
-            <div class="mgr"><i class="fa-solid fa-headset"></i> Вопросы? <a href="https://t.me/kotokola" target="_blank">@kotokola</a></div>
+
+            <!-- Inventory Tab -->
+            <div class="tab-panel active" role="tabpanel" data-tab="inv" aria-label="Инвентарь">
+                <div class="inventory-header">
+                    <h3>Мои NFT</h3>
+                    <span class="count" id="invCount">0</span>
+                </div>
+                <div class="nft-grid" id="invGrid" role="list" aria-label="Ваш инвентарь"></div>
+                <div class="empty-state" id="invEmpty" hidden>
+                    <i class="fa-solid fa-box-open"></i>
+                    <p>Инвентарь пуст</p>
+                    <p class="muted">Купите или получите NFT, чтобы они появились здесь</p>
+                </div>
+            </div>
+
+            <!-- Withdraw Tab -->
+            <div class="tab-panel" role="tabpanel" data-tab="wd" aria-label="Вывод средств" hidden>
+                <form class="withdraw-form" id="wdForm">
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="wdCur">Валюта</label>
+                            <select id="wdCur" required>
+                                <option value="USDT">USDT</option>
+                                <option value="STARS">Telegram Stars</option>
+                                <option value="TON">TON</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label for="wdAmt">Сумма</label>
+                            <input type="number" id="wdAmt" min="0.01" step="0.01" placeholder="100" required>
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label for="wdTo">Кошелёк / @username</label>
+                        <input type="text" id="wdTo" placeholder="@username или адрес кошелька" required>
+                    </div>
+                    <div class="fee-preview" id="wdPreview">
+                        <span>К получению: <strong id="wdReceive">—</strong></span>
+                    </div>
+                    <div class="fee-note">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>Комиссия: <strong>5%</strong> + сетевая комиссия блокчейна</span>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <span>Запросить вывод</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </button>
+                </form>
+                <div class="msg" id="wdMsg" hidden></div>
+            </div>
+
+            <!-- Transactions Tab -->
+            <div class="tab-panel" role="tabpanel" data-tab="tx" aria-label="История транзакций" hidden>
+                <div class="tx-header">
+                    <h3>История операций</h3>
+                </div>
+                <div class="tx-list" id="txList"></div>
+                <div class="empty-state" id="txEmpty" hidden>
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <p>История пуста</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- MARKET DETAIL MODAL -->
+        <div class="modal-overlay" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+            <div class="modal-card">
+                <button class="modal-close" id="modalClose" aria-label="Закрыть"><i class="fa-solid fa-xmark"></i></button>
+                <div class="modal-media">
+                    <img id="modalImg" src="" alt="">
+                    <div class="modal-badge" id="modalBadge"></div>
+                </div>
+                <div class="modal-body">
+                    <h3 id="modalTitle">—</h3>
+                    <div class="modal-price" id="modalPrice">—</div>
+                    <div class="modal-seller" id="modalSeller"></div>
+                    <div class="modal-link">
+                        <span>Ссылка:</span>
+                        <a id="modalLink" href="#" target="_blank" rel="noopener">Открыть в Telegram</a>
+                    </div>
+                    <div class="modal-attrs" id="modalAttrs"></div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" id="modalCancel">Отмена</button>
+                    <button class="btn btn-primary" id="modalBuy" disabled>
+                        <i class="fa-solid fa-bag-shopping"></i> Купить
+                    </button>
+                </div>
+                <div class="msg" id="modalMsg" hidden></div>
+            </div>
         </div>
-    </div>
+
+    </main>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer" aria-live="polite"></div>
 
     <script src="script.js"></script>
 </body>

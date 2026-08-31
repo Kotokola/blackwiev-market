@@ -1,280 +1,233 @@
 (() => {
-    const $ = s => document.getElementById(s);
-    const esc = s => String(s || '').replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>');
-    const fp = (v, c) => (Number(v) || 0).toFixed(2) + ' ' + (c || '');
+    'use strict';
+
+    /* ===== Utilities ===== */
+    const $ = id => document.getElementById(id);
+    const $$ = sel => document.querySelectorAll(sel);
+    const esc = s => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&', '<': '<', '>': '>', '"': '"', "'": "'" }[c]));
+    const fmt = (v, c) => (Number(v) || 0).toFixed(2) + ' ' + (c || '');
     const FEE = 0.05;
 
-    // Format attributes for display
-    function fmtAttrs(a) {
-        if (!a || typeof a !== 'object') return '';
-        const parts = [];
-        if (a.model) parts.push('Model: ' + a.model);
-        if (a.backdrop) parts.push('Backdrop: ' + a.backdrop);
-        if (a.symbol) parts.push('Symbol: ' + a.symbol);
-        if (a.pattern) parts.push('Pattern: ' + a.pattern);
-        if (a.background) parts.push('Background: ' + a.background);
-        if (a.number) parts.push('#' + a.number);
-        return parts.join(' • ');
-    }
+    const tgApp = () => { try { return window.Telegram?.WebApp || null } catch { return null } };
+    const tgSend = data => { const a = tgApp(); if (!a) return; try { a.sendData(typeof data === 'string' ? data : JSON.stringify(data)) } catch { } };
 
-    function fmtAttrsHtml(a) {
-        if (!a || typeof a !== 'object') return '';
-        let h = '';
-        if (a.model) h += '<div class="mcr"><span class="mcl">Model:</span><span class="mcv">' + esc(a.model) + '</span></div>';
-        if (a.backdrop) h += '<div class="mcr"><span class="mcl">Backdrop:</span><span class="mcv">' + esc(a.backdrop) + '</span></div>';
-        if (a.symbol) h += '<div class="mcr"><span class="mcl">Symbol:</span><span class="mcv">' + esc(a.symbol) + '</span></div>';
-        if (a.pattern) h += '<div class="mcr"><span class="mcl">Pattern:</span><span class="mcv">' + esc(a.pattern) + '</span></div>';
-        if (a.background) h += '<div class="mcr"><span class="mcl">Background:</span><span class="mcv">' + esc(a.background) + '</span></div>';
-        if (a.number) h += '<div class="mcr"><span class="mcl">Number:</span><span class="mcv">#' + esc(a.number) + '</span></div>';
-        return h;
-    }
-
-    function tgApp() { try { return window.Telegram?.WebApp || null } catch { return null } }
-    function tgSend(d) { const a = tgApp(); if (!a) return; try { a.sendData(typeof d === 'string' ? d : JSON.stringify(d)) } catch { } }
-
+    /* ===== State ===== */
     let balances = { usdt: 0, stars: 0, ton: 0 };
-    let idVisible = false, sellNft = null, sellCurrency = null, buyNft = null;
+    let sellNft = null, sellCurrency = null, buyNft = null;
+    let currentStep = 1;
+    let idVisible = true;
 
-    function show(id) {
-        document.querySelectorAll('.scr').forEach(s => s.classList.remove('act'));
-        const el = $(id); if (el) el.classList.add('act');
+    /* ===== Helpers ===== */
+    const show = id => {
+        $$('.screen').forEach(s => s.classList.remove('active'));
+        const el = $(id); if (el) el.classList.add('active');
         window.scrollTo(0, 0);
-    }
-    function msg(id, t, k) { const e = $(id); if (!e) return; e.textContent = t || ''; e.className = 'ms'; if (k) e.classList.add(k); }
-    function fillProfile(name, username, id, photoUrl) {
-        $('pNm').textContent = name || 'Неизвестно';
-        $('pUs').textContent = username ? '@' + username : '—';
-        $('pId').textContent = String(id || '—');
-        if (photoUrl) $('av').innerHTML = '<img src="' + esc(photoUrl) + '" alt="">'; else $('av').textContent = (name || '?')[0].toUpperCase();
-    }
+    };
 
-    function loadProfile() {
+    const toast = (text, type = 'info') => {
+        const container = $('#toastContainer');
+        const el = document.createElement('div');
+        el.className = 'toast ' + type;
+        el.textContent = text;
+        container.appendChild(el);
+        setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3000);
+    };
+
+    const msg = (id, text, type) => {
+        const el = $(id); if (!el) return;
+        el.textContent = text || '';
+        el.className = 'msg ' + (type || '');
+        el.hidden = !text;
+    };
+
+    const fillProfile = (name, username, id, photoUrl) => {
+        $('#profName').textContent = name || 'Неизвестно';
+        $('#profUser').textContent = username ? '@' + username : '—';
+        $('#profId').textContent = String(id || '—');
+        if (photoUrl) $('#avatar').innerHTML = '<img src="' + esc(photoUrl) + '" alt="">';
+        else $('#avatar').textContent = (name || '?')[0].toUpperCase();
+    };
+
+    /* ===== Profile / Auth ===== */
+    const loadProfile = () => {
         const a = tgApp();
         if (a) {
-            try { if (a.initDataUnsafe && a.initDataUnsafe.user) {
+            try { if (a.initDataUnsafe?.user) {
                 const u = a.initDataUnsafe.user;
                 fillProfile([u.first_name, u.last_name].filter(Boolean).join(' '), u.username, u.id, u.photo_url);
                 return;
-            } } catch { }
+            }} catch {}
             try { if (a.initData) {
                 const p = new URLSearchParams(a.initData);
                 const raw = p.get('user');
                 if (raw) { const u = JSON.parse(raw); fillProfile([u.first_name, u.last_name].filter(Boolean).join(' '), u.username, u.id, u.photo_url); return; }
-            } } catch { }
+            }} catch {}
         }
         try {
-            const p = new URLSearchParams(window.location.search);
+            const p = new URLSearchParams(location.search);
             const uid = p.get('uid');
             if (uid) { fillProfile(p.get('fn') || 'Неизвестно', p.get('un') || '', Number(uid)); return; }
-        } catch { }
+        } catch {}
         fillProfile('Неизвестно', '', 0, null);
         tgSend({ action: 'get_balance' });
-    }
+    };
 
-    function toggleId() { idVisible = !idVisible; $('pId').classList.toggle('show', idVisible); $('btnToggleId').textContent = idVisible ? 'Показать' : 'Скрыть'; }
+    const toggleId = () => {
+        idVisible = !idVisible;
+        $('#profId').classList.toggle('show', idVisible);
+        $('#btnToggleId').innerHTML = idVisible ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+    };
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const a = tgApp();
-        if (a) { try { a.expand() } catch { } try { a.ready() } catch { } }
-        loadProfile();
-        setTimeout(loadProfile, 300);
-        setTimeout(loadProfile, 1000);
-
-        initBg(); initRules(); initMenu(); initTabs(); initSell(); initBuy(); initWithdraw();
-        $('btnToggleId').onclick = toggleId;
-        show('scrRules');
-    });
-
-    function initRules() {
-        const cb = $('cbR'), btn = $('btnR');
-        btn.disabled = !cb.checked;
-        cb.onchange = () => { btn.disabled = !cb.checked };
-        btn.onclick = () => { try { localStorage.setItem('bb_r', '1') } catch { } show('scrMenu'); tgSend({ action: 'accept_rules' }) };
-        try { if (localStorage.getItem('bb_r') === '1') show('scrMenu') } catch { }
-    }
-
-    function initMenu() {
-        document.querySelectorAll('[data-go]').forEach(b => {
+    /* ===== Navigation ===== */
+    const initNav = () => {
+        $$('[data-go]').forEach(b => {
             b.onclick = () => {
                 const g = b.dataset.go;
                 show('scr' + g[0].toUpperCase() + g.slice(1));
-                if (g === 'sell') { resetSell(); fetchMyNfts() }
-                if (g === 'buy') fetchMarket()
-                if (g === 'profile') { loadProfile(); tgSend({ action: 'get_balance' }); fetchMyNfts() }
+                if (g === 'sell') { resetSell(); fetchMyNfts(); }
+                if (g === 'buy') fetchMarket();
+                if (g === 'profile') { loadProfile(); tgSend({ action: 'get_balance' }); fetchMyNfts(); }
             };
         });
-        document.querySelectorAll('[data-back]').forEach(b => {
+        $$('[data-back]').forEach(b => {
             b.onclick = () => show('scr' + b.dataset.back[0].toUpperCase() + b.dataset.back.slice(1));
         });
-    }
+    };
 
-    function initTabs() {
-        document.querySelectorAll('.tab').forEach(t => {
+    const initTabs = () => {
+        $$('.tab').forEach(t => {
             t.onclick = () => {
-                document.querySelectorAll('.tab').forEach(x => x.classList.remove('act'));
-                document.querySelectorAll('.tc').forEach(x => x.classList.remove('act'));
-                t.classList.add('act');
-                const s = document.querySelector('.tc[data-tab="' + t.dataset.tab + '"]');
-                if (s) s.classList.add('act');
+                $$('.tab').forEach(x => { x.classList.remove('active'); x.setAttribute('aria-selected', 'false'); });
+                $$('.tab-panel').forEach(x => x.hidden = true);
+                t.classList.add('active');
+                t.setAttribute('aria-selected', 'true');
+                const panel = $('.tab-panel[data-tab="' + t.dataset.tab + '"]');
+                if (panel) panel.hidden = false;
                 if (t.dataset.tab === 'inv') fetchMyNfts();
                 if (t.dataset.tab === 'tx') tgSend({ action: 'get_transactions' });
                 if (t.dataset.tab === 'wd') tgSend({ action: 'get_balance' });
             };
         });
-    }
+    };
 
-    function resetSell() {
-        sellNft = null; sellCurrency = null;
-        if ($('step1')) $('step1').classList.remove('done');
-        if ($('step2')) $('step2').classList.add('locked');
-        if ($('step3')) $('step3').classList.add('locked');
-        if ($('sellS')) $('sellS').textContent = '—';
-        if ($('sellP')) $('sellP').value = '';
-        document.querySelectorAll('.curbtn').forEach(b => b.classList.remove('sel'));
-        msg('msgSell', '', '');
-    }
-    function initSell() {
-        document.querySelectorAll('.curbtn').forEach(btn => {
-            btn.onclick = () => {
-                document.querySelectorAll('.curbtn').forEach(b => b.classList.remove('sel'));
-                btn.classList.add('sel'); sellCurrency = btn.dataset.cur;
-                if ($('step3')) $('step3').classList.remove('locked');
-                if (sellNft && $('sellS')) $('sellS').textContent = sellNft.name + ' (' + sellCurrency + ')';
-            };
-        });
-        if ($('btnSell')) $('btnSell').onclick = () => {
-            if (!sellNft || !sellCurrency) { msg('msgSell', 'Выберите NFT и валюту', 'wn'); return }
-            const p = Number($('sellP').value);
-            if (!p || p <= 0) { msg('msgSell', 'Укажите цену', 'wn'); return }
-            tgSend({ action: 'list_nft', nft_id: sellNft.id, price: p, currency: sellCurrency });
-            msg('msgSell', 'Выставлено!', 'ok'); setTimeout(resetSell, 2000);
+    /* ===== Rules ===== */
+    const initRules = () => {
+        const cb = $('#cbRules'), btn = $('#btnEnter');
+        btn.disabled = !cb.checked;
+        cb.onchange = () => { btn.disabled = !cb.checked };
+        btn.onclick = () => {
+            try { localStorage.setItem('bb_rules', '1'); } catch {}
+            show('scrMenu');
+            tgSend({ action: 'accept_rules' });
         };
-    }
-    function renderSell(items) {
-        const el = $('sellL'), em = $('sellE'); if (!el) return;
-        el.innerHTML = ''; em.style.display = items.length ? 'none' : 'block';
+        try { if (localStorage.getItem('bb_rules') === '1') show('scrMenu'); } catch {}
+    };
+
+    /* ===== Sell Flow ===== */
+    const resetSell = () => {
+        sellNft = null; sellCurrency = null; currentStep = 1;
+        updateStepUI();
+        $('#sellGrid').innerHTML = '';
+        $('#sellEmpty').hidden = false;
+        $('#sellPrice').value = '';
+        $('#btnList').disabled = true;
+        $$('.currency-btn').forEach(b => b.classList.remove('selected'));
+        $('#sellPreview').hidden = true;
+        msg('sellMsg', '', '');
+    };
+
+    const updateStepUI = () => {
+        $$('.step-dot').forEach((d, i) => {
+            d.classList.toggle('active', i + 1 <= currentStep);
+        });
+        $$('.step-panel').forEach(p => p.hidden = Number(p.dataset.step) !== currentStep);
+        $$('.step-line').forEach((l, i) => {
+            l.style.setProperty('--fill', i + 1 < currentStep ? '100%' : '0%');
+        });
+    };
+
+    const renderSellGrid = items => {
+        const el = $('#sellGrid'), em = $('#sellEmpty');
+        el.innerHTML = '';
+        em.hidden = items.length > 0;
         items.forEach(n => {
-            const b = document.createElement('button'); b.className = 'li'; b.type = 'button';
             const attrs = n.attributes || {};
-            const sub = fmtAttrs(attrs) || (n.is_listed ? '• На продаже' : '• В инвентаре');
-            b.innerHTML = '<div class="lii"><img src="' + esc(n.image_url || '') + '" onerror="this.style.display=\'none\'"></div><div class="lib"><div class="lin">' + esc(n.name || 'NFT') + (attrs.number ? ' #' + esc(attrs.number) : '') + '</div><div class="lis">' + esc(sub) + '</div></div>';
-            b.onclick = () => { el.querySelectorAll('.li').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); sellNft = n;
-                if ($('step1')) $('step1').classList.add('done'); if ($('step2')) $('step2').classList.remove('locked'); msg('msgSell', '', '') };
-            el.appendChild(b);
+            const btn = document.createElement('button');
+            btn.className = 'nft-item';
+            btn.type = 'button';
+            btn.setAttribute('role', 'listitem');
+            btn.setAttribute('aria-label', n.name);
+            btn.innerHTML = `
+                <img class="nft-img" src="${esc(n.image_url || '')}" alt="" onerror="this.style.display='none'">
+                <div class="nft-meta">
+                    <span class="nft-name">${esc(n.name || 'NFT')}${attrs.number ? ' #' + esc(attrs.number) : ''}</span>
+                    <span class="nft-status ${n.is_listed ? 'listed' : ''}">${n.is_listed ? '• На продаже' : '• В инвентаре'}</span>
+                </div>
+            `;
+            btn.onclick = () => selectNft(n, btn);
+            el.appendChild(btn);
         });
-    }
+    };
 
-    function initBuy() {
-        if ($('btnBuy')) $('btnBuy').onclick = () => {
-            if (!buyNft) return;
-            tgSend({ action: 'create_purchase_request', nft_id: buyNft.id, offer_price: Number(buyNft.price), currency: buyNft.currency || 'USDT' });
-            msg('msgBuy', 'Заявка отправлена!', 'ok'); setTimeout(() => $('ov').classList.remove('show'), 1500);
-        };
-        if ($('mCl')) $('mCl').onclick = () => $('ov').classList.remove('show');
-        if ($('ov')) $('ov').onclick = e => { if (e.target === $('ov')) $('ov').classList.remove('show') };
-    }
-    function renderMarket(items) {
-        const el = $('mktL'), em = $('mktE'); if (!el) return;
-        el.innerHTML = ''; em.style.display = items.length ? 'none' : 'block';
-        items.forEach(n => {
-            const c = document.createElement('button'); c.className = 'mc'; c.type = 'button';
-            const attrs = n.attributes || {};
-            const attrHtml = fmtAttrsHtml(attrs);
-            c.innerHTML = '<div class="mci"><img src="' + esc(n.image_url || '') + '" onerror="this.style.display=\'none\'"></div><div class="mcb"><div class="mcn">' + esc(n.name || 'NFT') + (n.attributes?.number ? ' #' + esc(n.attributes.number) : '') + '</div>' +
-                (attrHtml ? '<div class="mcr"><span class="mcl">Атрибуты:</span><span class="mcv">' + attrHtml + '</span></div>' : '') +
-                '<div class="mcr"><span class="mcl">Цена:</span><span class="mcv">' + fp(n.price, n.currency) + '</span></div>' +
-                '<div class="mcr"><span class="mcl">Продавец:</span><span class="mcv">' + esc(n.seller_name || 'ID:' + n.owner_id) + '</span></div></div>';
-            c.onclick = () => {
-                buyNft = n; $('mI').src = n.image_url || ''; $('mT').textContent = n.name || 'NFT';
-                $('mP').textContent = fp(n.price, n.currency); $('mS').textContent = n.seller_name || 'ID:' + n.owner_id;
-                $('mBg').textContent = (n.attributes?.model || n.name || 'NFT').toUpperCase();
-                const attrHtml = fmtAttrsHtml(n.attributes || {});
-                $('mAttr').innerHTML = '<div><span>Ссылка</span><span id="mLk">' + esc(n.token_link || '') + '</span></div>' + attrHtml;
-                if ($('mLk')) $('mLk').textContent = n.token_link || '—';
-                $('msgBuy').textContent = ''; $('ov').classList.add('show'); $('btnBuy').disabled = false;
-            };
-            el.appendChild(c);
+    const selectNft = (nft, btn) => {
+        $$('#sellGrid .nft-item').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        sellNft = nft;
+        currentStep = 2;
+        updateStepUI();
+        renderCurrencyBtns();
+    };
+
+    const renderCurrencyBtns = () => {
+        const el = $('.currency-grid');
+        if (!el) return;
+        el.innerHTML = '';
+        ['USDT', 'STARS', 'TON'].forEach(cur => {
+            const btn = document.createElement('button');
+            btn.className = 'currency-btn';
+            btn.type = 'button';
+            btn.setAttribute('role', 'radio');
+            btn.setAttribute('aria-checked', 'false');
+            btn.dataset.cur = cur;
+            const icons = { USDT: 'fa-dollar-sign', STARS: 'fa-star', TON: 'fa-cube' };
+            btn.innerHTML = `<i class="fa-solid ${icons[cur]}"></i><span>${cur}</span>`;
+            btn.onclick = () => selectCurrency(cur, btn);
+            el.appendChild(btn);
         });
-    }
+    };
 
-    function renderProfInv(items) {
-        const el = $('prInv'), em = $('prInvE'); if (!el) return;
-        el.innerHTML = ''; em.style.display = items.length ? 'none' : 'block';
-        items.forEach(n => {
-            const d = document.createElement('div'); d.className = 'li';
-            const attrs = n.attributes || {};
-            const sub = fmtAttrs(attrs) || (n.is_listed ? '• На продаже' : '• В инвентаре');
-            d.innerHTML = '<div class="lii"><img src="' + esc(n.image_url || '') + '" onerror="this.style.display=\'none\'"></div><div class="lib"><div class="lin">' + esc(n.name || 'NFT') + (attrs.number ? ' #' + esc(attrs.number) : '') + '</div><div class="lis">' + esc(sub) + '</div></div>';
-            el.appendChild(d);
+    const selectCurrency = (cur, btn) => {
+        $$('.currency-grid .currency-btn').forEach(b => {
+            b.classList.remove('selected');
+            b.setAttribute('aria-checked', 'false');
         });
-        renderSell(items);
-    }
-
-    function renderTx(items) {
-        const el = $('txL'), em = $('txE'); if (!el) return;
-        el.innerHTML = ''; em.style.display = items.length ? 'none' : 'block';
-        items.forEach(tx => {
-            const d = document.createElement('div'); d.className = 'txi';
-            const a = Number(tx.amount) || 0;
-            d.innerHTML = '<b>' + esc(tx.type || '—') + '</b><div class="amt">' + (a >= 0 ? '+' : '') + a.toFixed(2) + ' ' + esc(tx.currency || 'USDT') + '</div><div class="det">' + esc(tx.details || tx.created_at || '') + '</div>';
-            el.appendChild(d);
-        });
-    }
-
-    function renderBalance(m) {
-        balances.usdt = Number(m.balance) || 0; balances.stars = Number(m.stars) || 0; balances.ton = Number(m.ton) || 0;
-        if ($('bUsdt')) $('bUsdt').textContent = balances.usdt.toFixed(2);
-        if ($('bStars')) $('bStars').textContent = balances.stars.toFixed(0);
-        if ($('bTon')) $('bTon').textContent = balances.ton.toFixed(2);
-        if (m.user_id) fillProfile(m.first_name || 'Неизвестно', m.username || '', m.user_id, null);
-    }
-
-    function initWithdraw() {
-        const ai = $('wdA'), cs = $('wdCur'), cl = $('wdCalc');
-        if (!ai || !cs || !cl) return;
-        function uc() { const a = Number(ai.value || 0), c = cs.value; if (a <= 0) { cl.textContent = 'К получению: —'; return } cl.textContent = 'К получению: ' + (a * (1 - FEE)).toFixed(2) + ' ' + c }
-        ai.oninput = uc; cs.onchange = uc;
-        $('btnWd').onclick = () => {
-            const a = Number($('wdA').value || 0), w = $('wdW').value || '', cur = $('wdCur').value;
-            if (a <= 0) { msg('msgWd', 'Укажите сумму', 'wn'); return }
-            if (!w) { msg('msgWd', 'Укажите @username или кошелёк', 'wn'); return }
-            const mm = { USDT: 1, STARS: 50, TON: 0.5 };
-            if (a < mm[cur]) { msg('msgWd', 'Минимум: ' + mm[cur] + ' ' + cur, 'wn'); return }
-            if (cur === 'USDT' && a > balances.usdt) { msg('msgWd', 'Недостаточно. Баланс: ' + balances.usdt.toFixed(2) + ' USDT', 'wn'); return }
-            if (cur === 'STARS' && a > balances.stars) { msg('msgWd', 'Недостаточно. Баланс: ' + balances.stars + ' Stars', 'wn'); return }
-            if (cur === 'TON' && a > balances.ton) { msg('msgWd', 'Недостаточно. Баланс: ' + balances.ton.toFixed(2) + ' TON', 'wn'); return }
-            tgSend({ action: 'create_withdraw', amount: a, currency: cur, wallet_address: w });
-            msg('msgWd', 'Заявка отправлена! Менеджер свяжется.', 'ok');
-        };
-    }
-
-    // --- Data fetching ---
-    async function fetchMyNfts() {
-        try {
-            // 1. Try URL param nfts (injected by bot menu button)
-            const sp = new URLSearchParams(location.search);
-            const nftsParam = sp.get('nfts');
-            if (nftsParam) {
-                try {
-                    const items = JSON.parse(nftsParam);
-                    if (Array.isArray(items) && items.length) {
-                        renderProfInv(items);
-                        return;
-                    }
-                } catch (e) { }
-            }
-            const uid = sp.get('uid') || window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 0;
-            const r = await fetch('./api.json?' + Date.now());
-            if (!r.ok) throw new Error('no api');
-            const data = await r.json();
-            const items = data[String(uid)] || [];
-            renderProfInv(items);
-        } catch (e) {
-            try { tgSend({ action: 'get_my_nfts' }); } catch (_) { }
+        btn.classList.add('selected');
+        btn.setAttribute('aria-checked', 'true');
+        sellCurrency = cur;
+        if (sellNft) {
+            $('#sellPreviewImg').src = sellNft.image_url || '';
+            $('#sellPreviewName').textContent = sellNft.name || 'NFT';
+            $('#sellPreviewCur').textContent = cur;
+            $('#sellPreview').hidden = false;
         }
-    }
+        currentStep = 3;
+        updateStepUI();
+    };
 
-    async function fetchMarket() {
+    const initSell = () => {
+        $('#btnList').onclick = () => {
+            if (!sellNft || !sellCurrency) { msg('sellMsg', 'Выберите NFT и валюту', 'wn'); return; }
+            const price = Number($('#sellPrice').value);
+            if (!price || price < 0.01) { msg('sellMsg', 'Укажите корректную цену (мин. 0.01)', 'wn'); return; }
+            tgSend({ action: 'list_nft', nft_id: sellNft.id, price: price, currency: sellCurrency });
+            msg('sellMsg', 'NFT выставлен на продажу!', 'ok');
+            setTimeout(resetSell, 1500);
+        };
+    };
+
+    /* ===== Market / Buy ===== */
+
+    const fetchMarket = async () => {
         try {
             const sp = new URLSearchParams(location.search);
             const mktParam = sp.get('market');
@@ -282,41 +235,240 @@
                 try {
                     const items = JSON.parse(mktParam);
                     if (Array.isArray(items) && items.length) {
-                        for (const it of items) { if (!it.seller_name) it.seller_name = 'ID:' + (it.owner_id || ''); }
+                        items.forEach(it => { if (!it.seller_name) it.seller_name = 'ID:' + (it.owner_id || ''); });
                         renderMarket(items);
                         return;
                     }
-                } catch (e) { }
+                } catch {}
             }
             const r = await fetch('./api.json?' + Date.now());
             if (!r.ok) throw new Error('no api');
             const data = await r.json();
             const all = Object.values(data).flat();
             const items = all.filter(x => x.is_listed);
-            for (const it of items) { if (!it.seller_name) it.seller_name = 'ID:' + (it.owner_id || ''); }
+            items.forEach(it => { if (!it.seller_name) it.seller_name = 'ID:' + (it.owner_id || ''); });
             renderMarket(items);
-        } catch (e) {
-            try { tgSend({ action: 'get_market' }); } catch (_) { }
+        } catch {
+            try { tgSend({ action: 'get_market' }); } catch {}
         }
+    };
+
+    const renderMarket = items => {
+        const el = $('#marketGrid'), em = $('#marketEmpty');
+        el.innerHTML = '';
+        em.hidden = items.length > 0;
+        items.forEach(n => {
+            const attrs = n.attributes || {};
+            const card = document.createElement('div');
+            card.className = 'market-item';
+            card.setAttribute('role', 'listitem');
+            const attrHtml = fmtAttrsHtml(n.attributes);
+            card.innerHTML = `
+                <img class="market-img" src="${esc(n.image_url || '')}" alt="" onerror="this.style.display='none'">
+                <div class="market-info">
+                    <div class="market-name">${esc(n.name || 'NFT')}${n.attributes?.number ? ' #' + esc(n.attributes.number) : ''}</div>
+                    ${attrHtml ? '<div class="market-attrs">' + attrHtml + '</div>' : ''}
+                    <div class="market-footer">
+                        <span class="market-price">${fmt(n.price, n.currency)}</span>
+                        <span class="market-seller">${esc(n.seller_name || 'ID:' + n.owner_id)}</span>
+                    </div>
+                </div>
+            `;
+            card.onclick = () => openModal(n);
+            $('#marketGrid').appendChild(card);
+        });
+    };
+
+    /* ===== Profile / Inventory ===== */
+    const fetchMyNfts = async () => {
+        try {
+            const sp = new URLSearchParams(location.search);
+            const nftsParam = sp.get('nfts');
+            if (nftsParam) {
+                try {
+                    const items = JSON.parse(nftsParam);
+                    if (Array.isArray(items) && items.length) {
+                        renderInventory(items);
+                        return;
+                    }
+                } catch {}
+            }
+            const uid = sp.get('uid') || window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 0;
+            const r = await fetch('./api.json?' + Date.now());
+            if (!r.ok) throw new Error('no api');
+            const data = await r.json();
+            renderInventory(data[String(uid)] || []);
+        } catch {
+            try { tgSend({ action: 'get_my_nfts' }); } catch {}
+        }
+    };
+
+    const renderInventory = items => {
+        const el = $('#invGrid'), em = $('#invEmpty'), cnt = $('#invCount');
+        el.innerHTML = '';
+        em.hidden = items.length > 0;
+        cnt.textContent = items.length;
+        items.forEach(n => {
+            const attrs = n.attributes || {};
+            const status = n.is_listed ? '• На продаже' : '• В инвентаре';
+            const card = document.createElement('div');
+            card.className = 'nft-item' + (n.is_listed ? ' listed' : '');
+            card.setAttribute('role', 'listitem');
+            card.innerHTML = `
+                <img class="nft-img" src="${esc(n.image_url || '')}" alt="" onerror="this.style.display='none'">
+                <div class="nft-meta">
+                    <span class="nft-name">${esc(n.name || 'NFT')}${attrs.number ? ' #' + esc(attrs.number) : ''}</span>
+                    <span class="nft-status ${n.is_listed ? 'listed' : ''}">${esc(status)}</span>
+                </div>
+            `;
+            el.appendChild(card);
+        });
+    };
+
+    /* ===== Modal ===== */
+    const openModal = nft => {
+        buyNft = nft;
+        const attrs = nft.attributes || {};
+        $('#modalImg').src = nft.image_url || '';
+        $('#modalBadge').textContent = nft.is_listed ? 'НА ПРОДАЖЕ' : 'В ИНВЕНТАРЕ';
+        $('#modalTitle').textContent = nft.name || 'NFT';
+        $('#modalPrice').textContent = fmt(nft.price, nft.currency);
+        $('#modalSeller').innerHTML = `Продавец: <strong>${esc(nft.seller_name || 'ID:' + nft.owner_id)}</strong>`;
+        $('#modalLink').href = nft.token_link || '#';
+        $('#modalLink').textContent = nft.token_link ? 'Открыть в Telegram' : 'Ссылка недоступна';
+        $('#modalAttrs').innerHTML = fmtAttrsHtml(attrs) || '<span class="attr-tag">Атрибутов нет</span>';
+        $('#modalBuy').disabled = nft.is_listed ? false : true;
+        $('#modalBuy').textContent = nft.is_listed ? 'Купить' : 'Не в продаже';
+        msg('modalMsg', '', '');
+        $('#modal').hidden = false;
+        document.body.style.overflow = 'hidden';
+    };
+
+    const closeModal = () => {
+        buyNft = null;
+        $('#modal').hidden = true;
+        document.body.style.overflow = '';
+    };
+
+    const initModal = () => {
+        $('#modalClose').onclick = closeModal;
+        $('#modalCancel').onclick = closeModal;
+        $('#modal').onclick = e => { if (e.target === $('#modal')) closeModal(); };
+        $('#modalBuy').onclick = () => {
+            if (!buyNft || !buyNft.is_listed) return;
+            tgSend({ action: 'create_purchase_request', nft_id: buyNft.id, offer_price: Number(buyNft.price), currency: buyNft.currency || 'USDT' });
+            msg('modalMsg', 'Заявка на покупку отправлена!', 'ok');
+            setTimeout(closeModal, 1500);
+        };
+        document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#modal').hidden) closeModal(); });
+    };
+
+    /* ===== Withdraw ===== */
+    const initWithdraw = () => {
+        const ai = $('#wdAmt'), cs = $('#wdCur'), cl = $('#wdPreview');
+        const update = () => {
+            const a = Number(ai.value || 0), c = cs.value;
+            if (a <= 0) { cl.innerHTML = 'К получению: <strong>—</strong>'; return; }
+            cl.innerHTML = 'К получению: <strong>' + (a * (1 - FEE)).toFixed(2) + '</strong> ' + c;
+        };
+        ai.oninput = update; cs.onchange = update;
+
+        $('#wdForm').onsubmit = e => {
+            e.preventDefault();
+            const a = Number($('#wdAmt').value || 0), w = $('#wdTo').value.trim(), cur = $('#wdCur').value;
+            if (a <= 0) { msg('wdMsg', 'Укажите сумму', 'wn'); return; }
+            if (!w) { msg('wdMsg', 'Укажите @username или кошелёк', 'wn'); return; }
+            const mins = { USDT: 1, STARS: 50, TON: 0.5 };
+            if (a < mins[cur]) { msg('wdMsg', 'Минимум: ' + mins[cur] + ' ' + cur, 'wn'); return; }
+            if (cur === 'USDT' && a > balances.usdt) { msg('wdMsg', 'Недостаточно. Баланс: ' + balances.usdt.toFixed(2) + ' USDT', 'wn'); return; }
+            if (cur === 'STARS' && a > balances.stars) { msg('wdMsg', 'Недостаточно. Баланс: ' + balances.stars + ' Stars', 'wn'); return; }
+            if (cur === 'TON' && a > balances.ton) { msg('wdMsg', 'Недостаточно. Баланс: ' + balances.ton.toFixed(2) + ' TON', 'wn'); return; }
+            tgSend({ action: 'create_withdraw', amount: a, currency: cur, wallet_address: w });
+            msg('wdMsg', 'Заявка на вывод отправлена! Менеджер свяжется.', 'ok');
+        };
+    };
+
+    /* ===== Transactions ===== */
+    const renderTx = items => {
+        const el = $('#txList'), em = $('#txEmpty');
+        el.innerHTML = '';
+        em.hidden = items.length > 0;
+        items.forEach(tx => {
+            const a = Number(tx.amount) || 0;
+            const div = document.createElement('div');
+            div.className = 'tx-item';
+            div.innerHTML = `
+                <div class="tx-main">
+                    <span class="tx-type">${esc(tx.type || '—')}</span>
+                    <span class="tx-details">${esc(tx.details || tx.created_at || '')}</span>
+                </div>
+                <span class="tx-amount ${a >= 0 ? 'positive' : 'negative'}">${a >= 0 ? '+' : ''}${fmt(tx.amount, tx.currency)}</span>
+            `;
+            $('#txList').appendChild(div);
+        });
+    };
+
+    /* ===== Balance ===== */
+    const renderBalance = m => {
+        balances.usdt = Number(m.balance) || 0;
+        balances.stars = Number(m.stars) || 0;
+        balances.ton = Number(m.ton) || 0;
+        $('#balUsdt').textContent = balances.usdt.toFixed(2);
+        $('#balStars').textContent = balances.stars.toFixed(0);
+        $('#balTon').textContent = balances.ton.toFixed(2);
+        if (m.user_id) fillProfile(m.first_name || 'Неизвестно', m.username || '', m.user_id, null);
+    };
+
+    /* ===== Withdraw Preview ===== */
+    const updateWithdrawPreview = () => {
+        const a = Number($('#wdAmt').value || 0), c = $('#wdCur').value;
+        const preview = $('#wdPreview');
+        if (a <= 0) { preview.innerHTML = 'К получению: <strong>—</strong>'; return; }
+        preview.innerHTML = 'К получению: <strong>' + (a * (1 - FEE)).toFixed(2) + '</strong> ' + c;
+    };
+
+    /* ===== Attribute Formatting ===== */
+    function fmtAttrsHtml(a) {
+        if (!a || typeof a !== 'object') return '';
+        let h = '';
+        if (a.model) h += '<div><span class="attr-label">Model:</span><span class="attr-value">' + esc(a.model) + '</span></div>';
+        if (a.backdrop) h += '<div><span class="attr-label">Backdrop:</span><span class="attr-value">' + esc(a.backdrop) + '</span></div>';
+        if (a.symbol) h += '<div><span class="attr-label">Symbol:</span><span class="attr-value">' + esc(a.symbol) + '</span></div>';
+        if (a.pattern) h += '<div><span class="attr-label">Pattern:</span><span class="attr-value">' + esc(a.pattern) + '</span></div>';
+        if (a.background) h += '<div><span class="attr-label">Background:</span><span class="attr-value">' + esc(a.background) + '</span></div>';
+        if (a.number) h += '<div><span class="attr-label">#:</span><span class="attr-value">' + esc(a.number) + '</span></div>';
+        return h;
     }
 
-    function onData(m) {
+    /* ===== Data Handlers ===== */
+    const onData = m => {
         const a = m?.action;
         if (a === 'get_balance') renderBalance(m);
-        if (a === 'get_market') renderMarket(m.items || []);
-        if (a === 'get_my_nfts') renderProfInv(m.items || []);
+        if (a === 'get_market') fetchMarket();
+        if (a === 'get_my_nfts') fetchMyNfts();
         if (a === 'get_transactions') renderTx(m.items || []);
         if (a === 'accept_rules') show('scrMenu');
-    }
-    const app = tgApp();
-    if (app) { try { app.onEvent('webapp_data', e => { try { onData(JSON.parse(e.data)) } catch { } }) } catch { } }
+    };
 
-    // Background
-    function initBg() {
-        const c = $('bgCanvas'); if (!c) return; const ctx = c.getContext('2d'); let w, h, pts = [];
-        function r() { w = c.width = innerWidth; h = c.height = innerHeight }
-        function m() { pts = []; for (let i = 0, n = Math.floor(w * h / 18000); i < n; i++) pts.push({ x: Math.random() * w, y: Math.random() * h, r: Math.random() * 1.8 + .4, vx: (Math.random() - .5) * .35, vy: (Math.random() - .5) * .35, o: Math.random() * .4 + .08 }) }
-        function f() { ctx.clearRect(0, 0, w, h); for (const p of pts) { p.x += p.vx; p.y += p.vy; if (p.x < 0) p.x = w; if (p.x > w) p.x = 0; if (p.y < 0) p.y = h; if (p.y > h) p.y = 0; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,136,204,' + p.o + ')'; ctx.fill() } requestAnimationFrame(f) }
-        r(); m(); f(); addEventListener('resize', () => { r(); m() });
-    }
+    /* ===== Background ===== */
+    const initBg = () => {
+        const c = $('#bgCanvas'); if (!c) return;
+        const ctx = c.getContext('2d'); let w, h, pts = [];
+        const resize = () => { w = c.width = innerWidth; h = c.height = innerHeight; };
+        const init = () => { pts = []; for (let i = 0, n = Math.floor(w * h / 18000); i < n; i++) pts.push({ x: Math.random() * w, y: Math.random() * h, r: Math.random() * 1.8 + .4, vx: (Math.random() - .5) * .35, vy: (Math.random() - .5) * .35, o: Math.random() * .4 + .08 }); };
+        const frame = () => { ctx.clearRect(0, 0, w, h); for (const p of pts) { p.x += p.vx; p.y += p.vy; if (p.x < 0) p.x = w; if (p.x > w) p.x = 0; if (p.y < 0) p.y = h; if (p.y > h) p.y = 0; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,136,204,' + p.o + ')'; ctx.fill(); } requestAnimationFrame(frame); };
+        resize(); init(); frame(); addEventListener('resize', () => { resize(); init(); });
+    };
+
+    /* ===== Init ===== */
+    document.addEventListener('DOMContentLoaded', () => {
+        const a = tgApp();
+        if (a) { try { a.expand() } catch {} try { a.ready() } catch {} }
+        initBg(); initRules(); initNav(); initTabs(); initSell(); initWithdraw(); initModal();
+        $('#btnToggleId').onclick = () => { idVisible = !idVisible; $('#profId').classList.toggle('show', idVisible); $('#btnToggleId').innerHTML = idVisible ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>'; };
+        loadProfile(); setTimeout(loadProfile, 300); setTimeout(loadProfile, 1000);
+
+        /* ===== WebApp Data Listener ===== */
+        if (a) try { a.onEvent('webapp_data', e => { try { onData(JSON.parse(e.data)); } catch {} }) } catch {}
+    });
 })();
