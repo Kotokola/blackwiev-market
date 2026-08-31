@@ -25,19 +25,19 @@
 
 <main class="app">
 
-    
+    <!-- Rules Screen -->
     <section class="scr act" id="scrRules">
         <div class="box">
             <div class="ico"><i class="fa-solid fa-scroll"></i></div>
             <h2>BLACKWIEV NFT Market</h2>
             <p class="dim">Примите правила для доступа к маркету</p>
-            <a class="lnk" href="https://telegra.ph/PRAVILA-MAGAZINA-BLACKWIEV-NFT-MARKET-05-29" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Правила маркета</a>
-            <label class="chk"><input type="checkbox" id="cbR"><span>Я принимаю условия</span></label>
-            <button class="btn" id="btnR" disabled>Принять и войти</button>
+            <a class="lnk" href="https://telegra.ph/PRAVILA-MAGAZINA-BLACKWIEV-NFT-MARKET-05-29" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Правила магазина</a>
+            <label class="chk"><input type="checkbox" id="cbR"><span>Я принимаю правила</span></label>
+            <button class="btn" id="btnR" disabled>Войти в маркет</button>
         </div>
     </section>
 
-    
+    <!-- Main Menu -->
     <section class="scr" id="scrMenu">
         <div class="box">
             <h2>Главное меню</h2>
@@ -49,19 +49,17 @@
         </div>
     </section>
 
-    
+    <!-- Sell Screen -->
     <section class="scr" id="scrSell">
         <div class="box">
-            <div class="hd"><h2>Продать NFT</h2><button class="bk" data-back="menu"><i class="fa-solid fa-arrow-left"></i></button></div>
+            <div class="hd"><h2>Выставить NFT</h2><button class="bk" data-back="menu"><i class="fa-solid fa-arrow-left"></i></button></div>
 
-            
             <div class="step" id="step1">
                 <h3 class="st"><span class="stepnum">1</span> Выберите NFT</h3>
                 <div id="sellL" class="vl"></div>
-                <div class="emp" id="sellE"><i class="fa-solid fa-box-open"></i>Нет NFT для продажи</div>
+                <div class="emp" id="sellE"><i class="fa-solid fa-box-open"></i>NFT нет в инвентаре</div>
             </div>
 
-            
             <div class="step locked" id="step2">
                 <h3 class="st"><span class="stepnum">2</span> Выберите валюту</h3>
                 <div class="curgrid">
@@ -71,7 +69,6 @@
                 </div>
             </div>
 
-            
             <div class="step locked" id="step3">
                 <h3 class="st"><span class="stepnum">3</span> Установите цену</h3>
                 <div class="sel-nft" id="sellS">—</div>
@@ -80,21 +77,19 @@
             </div>
 
             <div class="ms" id="msgSell"></div>
-            <div class="mgr"><i class="fa-solid fa-headset"></i> Пополнение инвентаря и вывод средств через <b>@kotokola</b></div>
         </div>
     </section>
 
-    
+    <!-- Buy/Market Screen -->
     <section class="scr" id="scrBuy">
         <div class="box">
-            <div class="hd"><h2>Магазин</h2><button class="bk" data-back="menu"><i class="fa-solid fa-arrow-left"></i></button></div>
+            <div class="hd"><h2>Маркет</h2><button class="bk" data-back="menu"><i class="fa-solid fa-arrow-left"></i></button></div>
             <div id="mktL" class="vl"></div>
-            <div class="emp" id="mktE"><i class="fa-solid fa-store"></i>Пока пусто</div>
-            <div class="mgr"><i class="fa-solid fa-headset"></i> Пополнение инвентаря и вывод средств через <b>@kotokola</b></div>
+            <div class="emp" id="mktE"><i class="fa-solid fa-store"></i>Пусто</div>
         </div>
     </section>
 
-    
+    <!-- Profile Screen -->
     <section class="scr" id="scrProfile">
         <div class="box">
             <div class="hd"><h2>Профиль</h2><button class="bk" data-back="menu"><i class="fa-solid fa-arrow-left"></i></button></div>
@@ -107,7 +102,7 @@
             </div>
             <div class="idrow">
                 <span class="idlbl">ID: <span class="idval" id="pId">—</span></span>
-                <button class="btntiny" id="btnToggleId">Показать</button>
+                <button class="btntiny" id="btnToggleId">Скрыть</button>
             </div>
             <div class="tabs">
                 <button class="tab act" data-tab="inv">Инвентарь</button>
@@ -116,7 +111,7 @@
             </div>
             <div class="tc act" data-tab="inv">
                 <div id="prInv" class="vl"></div>
-                <div class="emp" id="prInvE"><i class="fa-solid fa-box-open"></i>Пусто</div>
+                <div class="emp" id="prInvE"><i class="fa-solid fa-box-open"></i>Инвентарь пуст</div>
             </div>
             <div class="tc" data-tab="wd">
                 <h3 class="st">Вывод средств</h3>
@@ -125,9 +120,9 @@
                     <select id="wdCur"><option value="USDT">USDT</option><option value="STARS">Telegram Stars</option><option value="TON">TON</option></select>
                 </div>
                 <div class="fld"><label>Сумма</label><input type="number" min="0" step="0.01" id="wdA" placeholder="100"></div>
-                <div class="fld"><label>@username для вывода</label><input type="text" id="wdW" placeholder="@username"></div>
-                <div class="wdcalc" id="wdCalc">Получите: —</div>
-                <button class="btn" id="btnWd">Создать заявку</button>
+                <div class="fld"><label>@username или кошелёк</label><input type="text" id="wdW" placeholder="@username или адрес"></div>
+                <div class="wdcalc" id="wdCalc">К получению: —</div>
+                <button class="btn" id="btnWd">Запросить вывод</button>
                 <div class="ms" id="msgWd"></div>
             </div>
             <div class="tc" data-tab="tx">
@@ -135,30 +130,28 @@
                 <div id="txL" class="vl"></div>
                 <div class="emp" id="txE"><i class="fa-solid fa-clock-rotate-left"></i>Пусто</div>
             </div>
-            <div class="mgr"><i class="fa-solid fa-headset"></i> Вопросы? Пишите <b>@kotokola</b></div>
         </div>
     </section>
 
-</main>
-
-<div class="ov" id="ov">
-    <div class="modal">
-        <button class="mcl" id="mCl"><i class="fa-solid fa-xmark"></i></button>
-        <img class="mi" id="mI" src="" alt="">
-        <div class="mbg" id="mR">—</div>
-        <h2 id="mT">—</h2>
-        <div class="mpr" id="mP">—</div>
-        <div class="msl" id="mS">—</div>
-        <div class="mdt">
-            <div><span>Ссылка</span><span id="mLk">—</span></div>
-            <div><span>Редкость</span><span id="mRT">—</span></div>
+    <!-- Market Detail Overlay -->
+    <div class="ov" id="ov">
+        <div class="modal">
+            <button class="mcl" id="mCl"><i class="fa-solid fa-xmark"></i></button>
+            <img class="mi" id="mI" src="" alt="">
+            <div class="mbg" id="mBg"></div>
+            <h2 id="mT">—</h2>
+            <div class="mpr" id="mP">—</div>
+            <div class="msl" id="mS">—</div>
+            <div class="mdt">
+                <div><span>Ссылка</span><span id="mLk">—</span></div>
+                <div class="mattr" id="mAttr"></div>
+            </div>
+            <button class="btn btnb" id="btnBuy" disabled>Купить</button>
+            <div class="ms" id="msgBuy"></div>
+            <div class="mgr"><i class="fa-solid fa-headset"></i> Вопросы? <a href="https://t.me/kotokola" target="_blank">@kotokola</a></div>
         </div>
-        <button class="btn btnb" id="btnBuy" disabled>Купить через заявку</button>
-        <div class="ms" id="msgBuy"></div>
-        <div class="mgr"><i class="fa-solid fa-headset"></i> Вопросы? <b>@kotokola</b></div>
     </div>
-</div>
 
-<script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
