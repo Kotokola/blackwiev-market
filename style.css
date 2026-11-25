@@ -14,7 +14,6 @@
     --radius-sm: 8px;
     --radius: 12px;
     --radius-lg: 16px;
-    --shadow: rgba(0, 0, 0, 0.4);
     --transition: all 0.2s ease;
     --font-mono: 'JetBrains Mono', monospace;
     --font-ui: 'Space Grotesk', system-ui, sans-serif;
@@ -48,45 +47,31 @@ input:focus, select:focus { outline: none; border-color: var(--accent); box-shad
 img { max-width: 100%; height: auto; display: block; border-radius: var(--radius-sm); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-/* ===== Background canvas ===== */
+/* ===== Background ===== */
 #bgCanvas { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
 
-/* ===== Layout ===== */
+/* ===== Header ===== */
 .app-header {
-    position: sticky;
-    top: 0;
-    z-index: 100;
+    position: sticky; top: 0; z-index: 100;
     background: linear-gradient(180deg, rgba(10, 14, 20, 0.98) 0%, rgba(10, 14, 20, 0) 100%);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
 }
 .header-inner {
-    max-width: 480px;
-    margin: 0 auto;
-    padding: 14px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
+    max-width: 480px; margin: 0 auto; padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
 }
 .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.1rem; color: var(--accent); }
 .logo svg { flex-shrink: 0; }
 .header-balance { display: flex; gap: 6px; }
 .balance-item {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 6px 10px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-family: var(--font-mono);
-    font-size: 0.78rem;
-    font-weight: 600;
-    min-width: 78px;
-    justify-content: center;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 6px 10px; display: flex; align-items: center; gap: 5px;
+    font-family: var(--font-mono); font-size: 0.78rem; font-weight: 600;
+    min-width: 78px; justify-content: center;
 }
 .balance-item i { color: var(--accent); font-size: 0.85rem; }
+
 .app-main { max-width: 480px; margin: 0 auto; padding: 20px 16px 40px; }
 
 /* ===== Screens ===== */
@@ -94,25 +79,17 @@ img { max-width: 100%; height: auto; display: block; border-radius: var(--radius
 .screen.active { display: block; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-/* ===== Cards & buttons ===== */
+/* ===== Cards & Buttons ===== */
 .card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 26px;
-    max-width: 420px;
-    margin: 0 auto;
-    box-shadow: 0 8px 30px var(--shadow);
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 26px; max-width: 420px; margin: 0 auto; box-shadow: 0 8px 30px var(--shadow, rgba(0,0,0,0.4));
 }
+:root { --shadow: rgba(0, 0, 0, 0.4); }
 .rules-card { text-align: center; }
 .card-icon {
-    width: 64px; height: 64px;
-    border-radius: 16px;
-    background: var(--accent-bg);
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 16px;
-    color: var(--accent);
-    font-size: 1.5rem;
+    width: 64px; height: 64px; border-radius: 16px;
+    background: var(--accent-bg); display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px; color: var(--accent); font-size: 1.5rem;
 }
 .card h1, .card h2 { font-size: 1.35rem; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.5px; }
 .muted { color: var(--fg-muted); font-size: 0.9rem; }
@@ -128,9 +105,17 @@ img { max-width: 100%; height: auto; display: block; border-radius: var(--radius
 .btn-secondary { background: var(--bg-elevated); border: 1px solid var(--border); color: var(--fg); }
 .btn-secondary:hover { background: var(--bg-card); border-color: var(--border-bright); }
 .btn-lg { padding: 14px 26px; font-size: 1rem; width: 100%; }
-.btn-icon { width: 40px; height: 40px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; background: var(--bg-elevated); border: 1px solid var(--border); color: var(--fg-muted); }
+.btn-icon {
+    width: 40px; height: 40px; border-radius: var(--radius);
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-elevated); border: 1px solid var(--border); color: var(--fg-muted);
+}
 .btn-icon:hover { background: var(--bg-card); color: var(--fg); }
-.btn-back { width: 40px; height: 40px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; background: var(--bg-elevated); border: 1px solid var(--border); color: var(--fg-muted); }
+.btn-back {
+    width: 40px; height: 40px; border-radius: var(--radius);
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-elevated); border: 1px solid var(--border); color: var(--fg-muted);
+}
 .btn-back:hover { background: var(--bg-card); color: var(--fg); }
 
 .link-btn { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--accent); margin: 14px 0 22px; font-size: 0.9rem; }
@@ -143,11 +128,9 @@ img { max-width: 100%; height: auto; display: block; border-radius: var(--radius
 }
 .checkbox-wrap input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .checkmark {
-    width: 22px; height: 22px;
-    border: 2px solid var(--border-bright);
+    width: 22px; height: 22px; border: 2px solid var(--border-bright);
     border-radius: 6px; flex-shrink: 0; margin-top: 2px;
-    display: flex; align-items: center; justify-content: center;
-    transition: var(--transition);
+    display: flex; align-items: center; justify-content: center; transition: var(--transition);
 }
 .checkbox-wrap input:checked + .checkmark { background: var(--accent); border-color: var(--accent); color: #0a0e14; }
 .checkmark::after { content: '\f00c'; font-family: "Font Awesome 6 Free"; font-weight: 900; font-size: 0.68rem; }
@@ -156,10 +139,10 @@ img { max-width: 100%; height: auto; display: block; border-radius: var(--radius
 .menu-card { padding: 22px; }
 .menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .menu-btn {
-    aspect-ratio: 1; border-radius: var(--radius-lg);
-    background: var(--bg-elevated); border: 1px solid var(--border);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 10px; padding: 18px; transition: var(--transition);
+    aspect-ratio: 1; border-radius: var(--radius-lg); background: var(--bg-elevated);
+    border: 1px solid var(--border); display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 10px; padding: 18px;
+    transition: var(--transition);
 }
 .menu-btn:hover { background: var(--bg-card); border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 24px var(--shadow); }
 .menu-btn .menu-icon { font-size: 1.5rem; color: var(--accent); }
@@ -206,7 +189,6 @@ img { max-width: 100%; height: auto; display: block; border-radius: var(--radius
 }
 .selected-nft img { width: 64px; height: 64px; object-fit: cover; border-radius: var(--radius-sm); flex-shrink: 0; }
 .selected-nft .nft-name { font-size: 0.95rem; }
-.selected-nft #sellPreviewCur { font-size: 0.7rem; }
 
 /* ===== Empty states ===== */
 .empty-state { text-align: center; padding: 40px 20px; color: var(--fg-muted); }
@@ -244,7 +226,6 @@ img { max-width: 100%; height: auto; display: block; border-radius: var(--radius
 .market-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; gap: 6px; }
 .market-price { font-weight: 700; color: var(--accent); font-size: 0.85rem; }
 .market-seller { font-size: 0.68rem; color: var(--fg-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.market-empty { color: var(--fg-muted); text-align: center; }
 
 /* ===== Profile ===== */
 .profile-header { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
@@ -272,7 +253,7 @@ img { max-width: 100%; height: auto; display: block; border-radius: var(--radius
 .inventory-header h3 { font-size: 1.1rem; font-weight: 700; }
 .count { font-weight: 700; font-size: 0.85rem; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 999px; padding: 3px 12px; }
 
-/* ===== Withdraw form ===== */
+/* ===== Withdraw ===== */
 .withdraw-form { display: flex; flex-direction: column; gap: 14px; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .form-field { display: flex; flex-direction: column; gap: 6px; }
@@ -281,7 +262,6 @@ img { max-width: 100%; height: auto; display: block; border-radius: var(--radius
 .fee-preview span { color: var(--fg-muted); font-size: 0.8rem; }
 .fee-preview strong { color: var(--fg); }
 .fee-note { display: flex; align-items: center; gap: 8px; color: var(--fg-dim); font-size: 0.75rem; margin-bottom: 8px; }
-.fee-note strong { color: var(--warn, #ffb800); }
 .note { color: var(--fg-dim); font-size: 0.72rem; margin-top: 6px; }
 
 /* ===== Transactions ===== */
@@ -295,7 +275,7 @@ img { max-width: 100%; height: auto; display: block; border-radius: var(--radius
 .tx-details { font-size: 0.68rem; color: var(--fg-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tx-amount { font-family: var(--font-mono); font-weight: 700; text-align: right; }
 .tx-amount.positive { color: var(--accent); }
-.tx-amount.negative { color: var(--error, #ff4757); }
+.tx-amount.negative { color: #ff4757; }
 
 /* ===== Modal ===== */
 .modal-overlay {
@@ -337,23 +317,12 @@ img { max-width: 100%; height: auto; display: block; border-radius: var(--radius
     padding: 10px 18px; font-size: 0.8rem; font-weight: 500;
     box-shadow: 0 8px 24px var(--shadow); opacity: 1; transition: opacity 0.35s ease;
 }
-.toast.error { border-color: var(--error); }
-.toast.warning { border-color: var(--warn); }
-
-/* ===== Hints ===== */
-.hint, .note { font-size: 0.68rem; color: var(--fg-dim); }
-
-/* ===== Screen edge margins ===== */
-.screen .card, .screen .market-filters { margin-top: 0; }
-.screen { min-height: 100vh; box-sizing: border-box; }
-.screen[id="scrProfile"] { padding: 20px 16px 40px; }
-.screen[id="scrProfile"] .profile-header { margin: 0; }
+.toast.error { border-color: #ff4757; }
+.toast.warning { border-color: #ffb800; }
 
 /* ===== Misc ===== */
 .msg { margin-top: 14px; font-size: 0.8rem; }
 .msg[hidden] { display: none; }
 .msg:not([hidden]) { display: block; }
-
-/* Toast animation */
 .toast { animation: toastIn 0.25s ease; }
 @keyframes toastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }

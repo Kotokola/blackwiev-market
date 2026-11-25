@@ -13,10 +13,8 @@
     const tgSend = data => { const a = tgApp(); if (!a) return; try { a.sendData(typeof data === 'string' ? data : JSON.stringify(data)) } catch { } };
 
     /* ===== State ===== */
-    let sellNft = null, sellCurrency = null;
-    let idVisible = true;
-    let marketItems = [];
-    const balances = { usdt: 0, stars: 0, ton: 0 };
+    let sellNft = null, sellCurrency = null, idVisible = true;
+    let marketItems = [], balances = { usdt: 0, stars: 0, ton: 0 };
 
     /* ===== Helpers ===== */
     const show = id => {
@@ -57,6 +55,7 @@
         }
     };
 
+    /* ===== Navigation ===== */
     const initNav = () => {
         $$('[data-go]').forEach(b => {
             b.onclick = () => {
@@ -75,10 +74,9 @@
     const initTabs = () => {
         $$('.tab').forEach(t => {
             t.onclick = () => {
-                $$('.tab').forEach(x => { x.classList.remove('active'); x.setAttribute('aria-selected', 'false'); });
+                $$('.tab').forEach(x => x.classList.remove('active'));
                 $$('.tab-panel').forEach(x => x.classList.add('hidden'));
                 t.classList.add('active');
-                t.setAttribute('aria-selected', 'true');
                 const panel = $('.tab-panel[data-tab="' + t.dataset.tab + '"]');
                 if (panel) panel.classList.remove('hidden');
                 if (t.dataset.tab === 'inv') loadMyNfts();
@@ -103,7 +101,7 @@
     };
 
     /* ===== Data loading ===== */
-    const fetchJSON = async (url) => {
+    const fetchJSON = async url => {
         const r = await fetch(url + (url.includes('?') ? '&' : '?') + Date.now());
         if (!r.ok) throw new Error('no data');
         return r.json();
@@ -151,39 +149,11 @@
     };
 
     /* ---------- Market ---------- */
-    const loadMarket = async () => {
-        try {
-            const sp = new URLSearchParams(location.search);
-            const param = sp.get('market');
-            if (param) {
-                try { const items = JSON.parse(param); if (Array.isArray(items)) marketItems = items; } catch { }
-            } else {
-                const data = await fetchJSON('./api.json');
-                marketItems = Object.values(data).flat().filter(x => x.is_listed);
-            }
-            marketItems.forEach(it => { if (!it.seller_name) it.seller_name = 'ID: ' + (it.owner_id || ''); });
-            renderMarket(sortMarket(marketItems, $('#sortSelect')?.value || 'new'));
-            updateMarketControls();
-        } catch {
-            try { tgSend({ action: 'get_market' }); } catch { }
-        }
-    };
-
     const sortMarket = (items, mode) => {
         const sorted = [...items];
         if (mode === 'price-asc') sorted.sort((a, b) => (a.price || 0) - (b.price || 0));
         else if (mode === 'price-desc') sorted.sort((a, b) => (b.price || 0) - (a.price || 0));
         return sorted;
-    };
-
-    const updateMarketControls = () => {
-        const sortSel = $('#sortSelect'), curSel = $('#curFilter');
-        if (!sortSel || !curSel) return;
-        sortSel.addEventListener('change', () => renderMarket(sortMarket(marketItems, sortSel.value)));
-        curSel.addEventListener('change', () => {
-            const filter = curSel.value;
-            renderMarket(filter ? marketItems.filter(n => n.currency === filter) : marketItems);
-        });
     };
 
     const renderMarket = items => {
@@ -209,24 +179,48 @@
         });
     };
 
+    const loadMarket = async () => {
+        try {
+            const sp = new URLSearchParams(location.search);
+            const param = sp.get('market');
+            if (param) {
+                try { const items = JSON.parse(param); if (Array.isArray(items)) marketItems = items; } catch { }
+            } else {
+                const data = await fetchJSON('./api.json');
+                marketItems = Object.values(data).flat().filter(x => x.is_listed);
+            }
+            marketItems.forEach(it => { if (!it.seller_name) it.seller_name = 'ID: ' + (it.owner_id || ''); });
+            const sortSel = $('#sortSelect');
+            renderMarket(sortMarket(marketItems, sortSel?.value || 'new'));
+        } catch {
+            try { tgSend({ action: 'get_market' }); } catch { }
+        }
+    };
+
+    const initMarketControls = () => {
+        const sortSel = $('#sortSelect'), curSel = $('#curFilter');
+        if (!sortSel || !curSel) return;
+        sortSel.addEventListener('change', () => renderMarket(sortMarket(marketItems, sortSel.value)));
+        curSel.addEventListener('change', () => {
+            const filter = curSel.value;
+            renderMarket(filter ? marketItems.filter(n => n.currency === filter) : marketItems);
+        });
+    };
+
     /* ---------- Sell flow ---------- */
     const resetSell = () => {
         sellNft = null; sellCurrency = null;
         updateStepUI();
         $('#sellGrid').innerHTML = '';
         $('#sellEmpty').hidden = false;
+        $('#sellPreview').hidden = true;
         $('#sellPrice').value = '';
         $('#btnList').disabled = true;
         msg('sellMsg', '');
         initSellCurrencyGrid();
     };
 
-    const stepOf = () => {
-        if (!sellNft) return 1;
-        if (!sellCurrency) return 2;
-        return 3;
-    };
-
+    const stepOf = () => (!sellNft ? 1 : (!sellCurrency ? 2 : 3));
     const updateStepUI = () => {
         const step = stepOf();
         $$('.step-dot').forEach(d => d.classList.toggle('active', Number(d.dataset.step) <= step));
@@ -261,6 +255,7 @@
         if (btn) btn.classList.add('selected');
         sellNft = nft;
         updateStepUI();
+        $('#sellEmpty').hidden = !!nft;
     };
 
     const initSellCurrencyGrid = () => {
@@ -271,7 +266,6 @@
             const btn = document.createElement('button');
             btn.className = 'currency-btn' + (sellCurrency === cur ? ' selected' : '');
             btn.type = 'button';
-            btn.setAttribute('role', 'radio');
             btn.dataset.cur = cur;
             const icons = { USDT: 'fa-dollar-sign', STARS: 'fa-star', TON: 'fa-cube' };
             btn.innerHTML = '<i class="fa-solid ' + icons[cur] + '"></i><span>' + cur + '</span>';
@@ -280,7 +274,7 @@
         });
     };
 
-    const selectCurrency = (cur) => {
+    const selectCurrency = cur => {
         $$('#sellCurrencyGrid .currency-btn').forEach(b => b.classList.remove('selected'));
         const btn = $('.currency-btn[data-cur="' + cur + '"]');
         if (btn) btn.classList.add('selected');
@@ -326,8 +320,7 @@
         const amt = $('#wdAmt'), cur = $('#wdCur');
         const update = () => {
             const a = Number(amt.value || 0);
-            if (a <= 0) { $('#wdReceive').textContent = '—'; return; }
-            $('#wdReceive').textContent = (a * (1 - FEE)).toFixed(2);
+            $('#wdReceive').textContent = a > 0 ? (a * (1 - FEE)).toFixed(2) : '—';
         };
         amt.oninput = update;
         cur.onchange = update;
@@ -476,7 +469,7 @@
         const a = tgApp();
         if (a) { try { a.expand(); } catch {} try { a.ready(); } catch {} }
         initBg(); initRules(); initNav(); initTabs(); initSell(); initWithdraw(); initModal();
-        initSellCurrencyGrid();
+        initSellCurrencyGrid(); initMarketControls();
         $('#btnToggleId').onclick = toggleId;
         loadProfile();
         setTimeout(loadProfile, 300);
