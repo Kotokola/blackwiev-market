@@ -116,6 +116,16 @@
         if (!cb || !btn) { console.warn('Rules elements not found'); return; }
         btn.disabled = !cb.checked;
         cb.onchange = () => { btn.disabled = !cb.checked };
+        // Fallback: handle click on label/checkmark
+        const label = cb.closest('.checkbox-wrap');
+        if (label) {
+            label.onclick = (e) => {
+                if (e.target === label || e.target.classList.contains('checkmark')) {
+                    cb.checked = !cb.checked;
+                    cb.onchange();
+                }
+            };
+        }
         btn.onclick = () => {
             try { localStorage.setItem('bb_rules', '1'); } catch {}
             show('scrMenu');
